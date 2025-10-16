@@ -7,13 +7,13 @@ import (
 	"github.com/yourusername/youdu-app-mcp/internal/config"
 )
 
-// Adapter wraps the Youdu client and provides simplified methods
+// Adapter 封装有度客户端并提供简化的方法
 type Adapter struct {
 	client *youdu.Client
 	config *config.Config
 }
 
-// New creates a new Adapter instance
+// New 创建一个新的 Adapter 实例
 func New(cfg *config.Config) (*Adapter, error) {
 	client := youdu.NewClient(&youdu.Config{
 		Addr:   cfg.Youdu.Addr,
@@ -28,13 +28,13 @@ func New(cfg *config.Config) (*Adapter, error) {
 	}, nil
 }
 
-// Close closes the adapter and releases resources
+// Close 关闭适配器并释放资源
 func (a *Adapter) Close() error {
-	// Currently, the youdu client doesn't require cleanup
+	// 目前，有度客户端不需要清理
 	return nil
 }
 
-// Context returns a default context
+// Context 返回默认上下文
 func (a *Adapter) Context() context.Context {
 	return context.Background()
 }

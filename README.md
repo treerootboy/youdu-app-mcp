@@ -1,46 +1,46 @@
-# Youdu Multi-Interface Service
+# 有度多接口服务
 
-A comprehensive service for Youdu IM that provides CLI, MCP (Model Context Protocol), and API interfaces through a unified adapter layer.
+为有度即时通讯提供 CLI、MCP（模型上下文协议）和 API 接口的综合服务，通过统一的适配器层实现。
 
-## Architecture
+## 架构
 
 ```
-   CLI       MCP       API (planned)
+   CLI       MCP       API（计划中）
     │         │         │
     └─────────┼─────────┘
               │
-           Adapter
+           适配器
               │
-           Youdu-SDK
+           有度SDK
 ```
 
-## Features
+## 特性
 
-- **Unified Adapter Layer**: All Youdu SDK operations are wrapped in a simplified adapter layer
-- **Automatic Tool/Command Generation**: CLI commands and MCP tools are automatically generated from adapter methods using reflection
-- **Type-Safe**: Full type safety with Go structs and JSON schema annotations
-- **Configuration Management**: Flexible configuration via files and environment variables
+- **统一适配器层**：所有有度 SDK 操作都封装在简化的适配器层中
+- **自动工具/命令生成**：CLI 命令和 MCP 工具通过反射自动从适配器方法生成
+- **类型安全**：使用 Go 结构体和 JSON schema 注解实现完全类型安全
+- **配置管理**：通过配置文件和环境变量灵活配置
 
-## Installation
+## 安装
 
-### Prerequisites
+### 前置要求
 
-- Go 1.23 or higher
-- Access to a Youdu IM server
+- Go 1.23 或更高版本
+- 可访问的有度 IM 服务器
 
-### Build
+### 构建
 
 ```bash
-# Build MCP server
+# 构建 MCP 服务器
 go build -o bin/youdu-mcp ./cmd/youdu-mcp
 
-# Build CLI
+# 构建 CLI
 go build -o bin/youdu-cli ./cmd/youdu-cli
 ```
 
-## Configuration
+## 配置
 
-Create a `config.yaml` file in your project root or at `~/.youdu/config.yaml`:
+在项目根目录或 `~/.youdu/config.yaml` 创建 `config.yaml` 文件：
 
 ```yaml
 youdu:
@@ -50,7 +50,7 @@ youdu:
   aes_key: "your-aes-key"
 ```
 
-Or use environment variables:
+或使用环境变量：
 
 ```bash
 export YOUDU_ADDR="http://your-youdu-server:7080"
@@ -59,49 +59,49 @@ export YOUDU_APP_ID="your-app-id"
 export YOUDU_AES_KEY="your-aes-key"
 ```
 
-## Usage
+## 使用方法
 
 ### CLI
 
-The CLI provides commands organized by functionality:
+CLI 提供按功能组织的命令：
 
 ```bash
-# List all commands
+# 列出所有命令
 ./bin/youdu-cli --help
 
-# Department operations
+# 部门操作
 ./bin/youdu-cli dept get-list --dept-id=0
 ./bin/youdu-cli dept get-user-list --dept-id=1
-./bin/youdu-cli dept create --name="Engineering" --parent-id=0
+./bin/youdu-cli dept create --name="技术部" --parent-id=0
 
-# User operations
+# 用户操作
 ./bin/youdu-cli user get --user-id="user123"
-./bin/youdu-cli user create --user-id="newuser" --name="New User" --dept-id=1
+./bin/youdu-cli user create --user-id="newuser" --name="新用户" --dept-id=1
 
-# Message operations
-./bin/youdu-cli message send-text-message --to-user="user123" --content="Hello!"
+# 消息操作
+./bin/youdu-cli message send-text-message --to-user="user123" --content="你好！"
 
-# Group operations
+# 群组操作
 ./bin/youdu-cli group get-list --user-id="user123"
-./bin/youdu-cli group create --name="Project Team"
+./bin/youdu-cli group create --name="项目组"
 
-# Session operations
-./bin/youdu-cli session create --title="Team Chat" --creator="user123" --type="group"
+# 会话操作
+./bin/youdu-cli session create --title="团队聊天" --creator="user123" --type="group"
 ```
 
-### MCP Server
+### MCP 服务器
 
-The MCP server provides all adapter methods as MCP tools that can be called by Claude Desktop or other MCP clients.
+MCP 服务器将所有适配器方法作为 MCP 工具提供，可被 Claude Desktop 或其他 MCP 客户端调用。
 
-#### Running the MCP Server
+#### 运行 MCP 服务器
 
 ```bash
 ./bin/youdu-mcp
 ```
 
-#### Claude Desktop Integration
+#### Claude Desktop 集成
 
-Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+添加到 Claude Desktop 配置（macOS 上的 `~/Library/Application Support/Claude/claude_desktop_config.json`）：
 
 ```json
 {
@@ -113,88 +113,88 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
 }
 ```
 
-#### Available MCP Tools
+#### 可用的 MCP 工具
 
-All tools follow snake_case naming:
+所有工具遵循 snake_case 命名规范：
 
-- **Department**: `get_dept_list`, `get_dept_user_list`, `get_dept_alias_list`, `create_dept`, `update_dept`, `delete_dept`
-- **User**: `get_user`, `create_user`, `update_user`, `delete_user`
-- **Message**: `send_text_message`, `send_image_message`, `send_file_message`, `send_link_message`, `send_sys_message`
-- **Group**: `get_group_list`, `get_group_info`, `create_group`, `update_group`, `delete_group`, `add_group_member`, `del_group_member`
-- **Session**: `create_session`, `get_session`, `update_session`, `send_text_session_message`, `send_image_session_message`, `send_file_session_message`
+- **部门**：`get_dept_list`、`get_dept_user_list`、`get_dept_alias_list`、`create_dept`、`update_dept`、`delete_dept`
+- **用户**：`get_user`、`create_user`、`update_user`、`delete_user`
+- **消息**：`send_text_message`、`send_image_message`、`send_file_message`、`send_link_message`、`send_sys_message`
+- **群组**：`get_group_list`、`get_group_info`、`create_group`、`update_group`、`delete_group`、`add_group_member`、`del_group_member`
+- **会话**：`create_session`、`get_session`、`update_session`、`send_text_session_message`、`send_image_session_message`、`send_file_session_message`
 
-## Project Structure
+## 项目结构
 
 ```
 youdu-app-mcp/
 ├── cmd/
-│   ├── youdu-cli/          # CLI entry point
-│   └── youdu-mcp/          # MCP server entry point
+│   ├── youdu-cli/          # CLI 入口
+│   └── youdu-mcp/          # MCP 服务器入口
 ├── internal/
-│   ├── adapter/            # Adapter layer (core business logic)
-│   │   ├── adapter.go      # Base adapter
-│   │   ├── dept.go         # Department methods
-│   │   ├── user.go         # User methods
-│   │   ├── message.go      # Message methods
-│   │   ├── group.go        # Group methods
-│   │   └── session.go      # Session methods
-│   ├── cli/                # CLI implementation
-│   │   ├── root.go         # Root command
-│   │   └── generator.go    # Auto-generate commands
-│   ├── mcp/                # MCP server implementation
-│   │   └── server.go       # Auto-register tools
-│   └── config/             # Configuration management
-│       └── config.go       # Viper configuration
-├── bin/                    # Built binaries
-├── config.yaml.example     # Example configuration
+│   ├── adapter/            # 适配器层（核心业务逻辑）
+│   │   ├── adapter.go      # 基础适配器
+│   │   ├── dept.go         # 部门方法
+│   │   ├── user.go         # 用户方法
+│   │   ├── message.go      # 消息方法
+│   │   ├── group.go        # 群组方法
+│   │   └── session.go      # 会话方法
+│   ├── cli/                # CLI 实现
+│   │   ├── root.go         # 根命令
+│   │   └── generator.go    # 自动生成命令
+│   ├── mcp/                # MCP 服务器实现
+│   │   └── server.go       # 自动注册工具
+│   └── config/             # 配置管理
+│       └── config.go       # Viper 配置
+├── bin/                    # 编译后的二进制文件
+├── config.yaml.example     # 配置示例
 ├── go.mod
 ├── go.sum
 └── README.md
 ```
 
-## Development
+## 开发
 
-### Adding New Methods
+### 添加新方法
 
-To add a new Youdu API method:
+要添加新的有度 API 方法：
 
-1. Add the method to the appropriate adapter file (e.g., `internal/adapter/dept.go`)
-2. Follow the pattern:
+1. 在相应的适配器文件中添加方法（例如 `internal/adapter/dept.go`）
+2. 遵循以下模式：
    ```go
    type MethodNameInput struct {
-       Field string `json:"field" jsonschema:"description=Field description,required"`
+       Field string `json:"field" jsonschema:"description=字段描述,required"`
    }
 
    type MethodNameOutput struct {
-       Result string `json:"result" jsonschema:"description=Result description"`
+       Result string `json:"result" jsonschema:"description=结果描述"`
    }
 
    func (a *Adapter) MethodName(ctx context.Context, input MethodNameInput) (*MethodNameOutput, error) {
-       // Implementation
+       // 实现代码
    }
    ```
-3. The method will automatically be available as:
-   - CLI command: `youdu-cli category method-name --field=value`
-   - MCP tool: `method_name`
+3. 该方法将自动作为以下形式可用：
+   - CLI 命令：`youdu-cli category method-name --field=value`
+   - MCP 工具：`method_name`
 
-### Key Design Principles
+### 关键设计原则
 
-1. **Single Source of Truth**: All APIs are defined once in the adapter layer
-2. **Auto-Generation**: CLI commands and MCP tools are automatically generated using reflection
-3. **Type Safety**: Input/Output structs with JSON schema annotations
-4. **Simplicity**: Adapter methods have simple, intuitive names and parameters
+1. **单一数据源**：所有 API 在适配器层只定义一次
+2. **自动生成**：CLI 命令和 MCP 工具使用反射自动生成
+3. **类型安全**：使用 JSON schema 注解的输入/输出结构体
+4. **简洁性**：适配器方法具有简单、直观的名称和参数
 
-## Dependencies
+## 依赖项
 
-- [github.com/modelcontextprotocol/go-sdk](https://github.com/modelcontextprotocol/go-sdk) - Official MCP SDK
-- [github.com/addcnos/youdu/v2](https://github.com/addcnos/youdu) - Youdu IM SDK
-- [github.com/spf13/cobra](https://github.com/spf13/cobra) - CLI framework
-- [github.com/spf13/viper](https://github.com/spf13/viper) - Configuration management
+- [github.com/modelcontextprotocol/go-sdk](https://github.com/modelcontextprotocol/go-sdk) - 官方 MCP SDK
+- [github.com/addcnos/youdu/v2](https://github.com/addcnos/youdu) - 有度 IM SDK
+- [github.com/spf13/cobra](https://github.com/spf13/cobra) - CLI 框架
+- [github.com/spf13/viper](https://github.com/spf13/viper) - 配置管理
 
-## License
+## 许可证
 
 MIT License
 
-## Contributing
+## 贡献
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+欢迎贡献！请随时提交 Pull Request。

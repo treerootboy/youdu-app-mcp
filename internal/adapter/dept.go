@@ -6,17 +6,17 @@ import (
 	"github.com/addcnos/youdu/v2"
 )
 
-// DeptListInput represents input for getting department list
+// DeptListInput 获取部门列表的输入参数
 type DeptListInput struct {
-	DeptID int `json:"dept_id" jsonschema:"description=Department ID (0 for root department),default=0"`
+	DeptID int `json:"dept_id" jsonschema:"description=部门ID（0表示根部门）,default=0"`
 }
 
-// DeptListOutput represents output for department list
+// DeptListOutput 部门列表的输出结果
 type DeptListOutput struct {
-	Departments []youdu.DeptItem `json:"departments" jsonschema:"description=List of departments"`
+	Departments []youdu.DeptItem `json:"departments" jsonschema:"description=部门列表"`
 }
 
-// GetDeptList retrieves the list of departments
+// GetDeptList 获取部门列表
 func (a *Adapter) GetDeptList(ctx context.Context, input DeptListInput) (*DeptListOutput, error) {
 	resp, err := a.client.GetDeptList(ctx, input.DeptID)
 	if err != nil {
@@ -28,17 +28,17 @@ func (a *Adapter) GetDeptList(ctx context.Context, input DeptListInput) (*DeptLi
 	}, nil
 }
 
-// DeptUserListInput represents input for getting department user list
+// DeptUserListInput 获取部门用户列表的输入参数
 type DeptUserListInput struct {
-	DeptID int `json:"dept_id" jsonschema:"description=Department ID,required"`
+	DeptID int `json:"dept_id" jsonschema:"description=部门ID,required"`
 }
 
-// DeptUserListOutput represents output for department user list
+// DeptUserListOutput 部门用户列表的输出结果
 type DeptUserListOutput struct {
-	Users []youdu.UserItem `json:"users" jsonschema:"description=List of users in department"`
+	Users []youdu.UserItem `json:"users" jsonschema:"description=部门用户列表"`
 }
 
-// GetDeptUserList retrieves users in a department
+// GetDeptUserList 获取部门中的用户列表
 func (a *Adapter) GetDeptUserList(ctx context.Context, input DeptUserListInput) (*DeptUserListOutput, error) {
 	resp, err := a.client.GetDeptUserList(ctx, input.DeptID)
 	if err != nil {
@@ -50,17 +50,17 @@ func (a *Adapter) GetDeptUserList(ctx context.Context, input DeptUserListInput) 
 	}, nil
 }
 
-// DeptAliasListInput represents input for getting department alias list
+// DeptAliasListInput 获取部门别名列表的输入参数
 type DeptAliasListInput struct {
-	DeptID int `json:"dept_id" jsonschema:"description=Department ID (0 for all departments),default=0"`
+	DeptID int `json:"dept_id" jsonschema:"description=部门ID（0表示所有部门）,default=0"`
 }
 
-// DeptAliasListOutput represents output for department alias list
+// DeptAliasListOutput 部门别名列表的输出结果
 type DeptAliasListOutput struct {
-	Aliases []youdu.DeptAliasItem `json:"aliases" jsonschema:"description=List of department aliases"`
+	Aliases []youdu.DeptAliasItem `json:"aliases" jsonschema:"description=部门别名列表"`
 }
 
-// GetDeptAliasList retrieves department aliases
+// GetDeptAliasList 获取部门别名列表
 func (a *Adapter) GetDeptAliasList(ctx context.Context, input DeptAliasListInput) (*DeptAliasListOutput, error) {
 	resp, err := a.client.GetDeptAliasList(ctx)
 	if err != nil {
@@ -72,20 +72,20 @@ func (a *Adapter) GetDeptAliasList(ctx context.Context, input DeptAliasListInput
 	}, nil
 }
 
-// CreateDeptInput represents input for creating a department
+// CreateDeptInput 创建部门的输入参数
 type CreateDeptInput struct {
-	Name     string `json:"name" jsonschema:"description=Department name,required"`
-	ParentID int    `json:"parent_id" jsonschema:"description=Parent department ID,required"`
-	SortID   int    `json:"sort_id" jsonschema:"description=Sort order,default=0"`
-	Alias    string `json:"alias" jsonschema:"description=Department alias"`
+	Name     string `json:"name" jsonschema:"description=部门名称,required"`
+	ParentID int    `json:"parent_id" jsonschema:"description=父部门ID,required"`
+	SortID   int    `json:"sort_id" jsonschema:"description=排序顺序,default=0"`
+	Alias    string `json:"alias" jsonschema:"description=部门别名"`
 }
 
-// CreateDeptOutput represents output for creating a department
+// CreateDeptOutput 创建部门的输出结果
 type CreateDeptOutput struct {
-	DeptID int `json:"dept_id" jsonschema:"description=Created department ID"`
+	DeptID int `json:"dept_id" jsonschema:"description=创建的部门ID"`
 }
 
-// CreateDept creates a new department
+// CreateDept 创建新部门
 func (a *Adapter) CreateDept(ctx context.Context, input CreateDeptInput) (*CreateDeptOutput, error) {
 	req := youdu.CreateDeptRequest{
 		Name:     input.Name,
@@ -104,21 +104,21 @@ func (a *Adapter) CreateDept(ctx context.Context, input CreateDeptInput) (*Creat
 	}, nil
 }
 
-// UpdateDeptInput represents input for updating a department
+// UpdateDeptInput 更新部门的输入参数
 type UpdateDeptInput struct {
-	DeptID   int    `json:"dept_id" jsonschema:"description=Department ID,required"`
-	Name     string `json:"name" jsonschema:"description=Department name"`
-	ParentID int    `json:"parent_id" jsonschema:"description=Parent department ID"`
-	SortID   int    `json:"sort_id" jsonschema:"description=Sort order"`
-	Alias    string `json:"alias" jsonschema:"description=Department alias"`
+	DeptID   int    `json:"dept_id" jsonschema:"description=部门ID,required"`
+	Name     string `json:"name" jsonschema:"description=部门名称"`
+	ParentID int    `json:"parent_id" jsonschema:"description=父部门ID"`
+	SortID   int    `json:"sort_id" jsonschema:"description=排序顺序"`
+	Alias    string `json:"alias" jsonschema:"description=部门别名"`
 }
 
-// UpdateDeptOutput represents output for updating a department
+// UpdateDeptOutput 更新部门的输出结果
 type UpdateDeptOutput struct {
-	Success bool `json:"success" jsonschema:"description=Whether the operation succeeded"`
+	Success bool `json:"success" jsonschema:"description=操作是否成功"`
 }
 
-// UpdateDept updates an existing department
+// UpdateDept 更新现有部门
 func (a *Adapter) UpdateDept(ctx context.Context, input UpdateDeptInput) (*UpdateDeptOutput, error) {
 	req := youdu.UpdateDeptRequest{
 		ID:       input.DeptID,
@@ -138,17 +138,17 @@ func (a *Adapter) UpdateDept(ctx context.Context, input UpdateDeptInput) (*Updat
 	}, nil
 }
 
-// DeleteDeptInput represents input for deleting a department
+// DeleteDeptInput 删除部门的输入参数
 type DeleteDeptInput struct {
-	DeptID int `json:"dept_id" jsonschema:"description=Department ID,required"`
+	DeptID int `json:"dept_id" jsonschema:"description=部门ID,required"`
 }
 
-// DeleteDeptOutput represents output for deleting a department
+// DeleteDeptOutput 删除部门的输出结果
 type DeleteDeptOutput struct {
-	Success bool `json:"success" jsonschema:"description=Whether the operation succeeded"`
+	Success bool `json:"success" jsonschema:"description=操作是否成功"`
 }
 
-// DeleteDept deletes a department
+// DeleteDept 删除部门
 func (a *Adapter) DeleteDept(ctx context.Context, input DeleteDeptInput) (*DeleteDeptOutput, error) {
 	_, err := a.client.DeleteDept(ctx, input.DeptID)
 	if err != nil {

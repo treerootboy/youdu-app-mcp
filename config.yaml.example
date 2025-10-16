@@ -1,5 +1,10 @@
+# 有度即时通讯配置
 youdu:
+  # 有度服务器地址
   addr: "http://your-youdu-server:7080"
+  # 企业总机号
   buin: 123456789
+  # 应用ID
   app_id: "your-app-id"
+  # AES加密密钥
   aes_key: "your-aes-key"
