@@ -1,0 +1,5 @@
+youdu:
+  addr: "http://your-youdu-server:7080"
+  buin: 123456789
+  app_id: "your-app-id"
+  aes_key: "your-aes-key"
