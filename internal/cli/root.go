@@ -20,21 +20,21 @@ var rootCmd = &cobra.Command{
 	Short: "Youdu IM CLI tool",
 	Long:  `A command-line interface for interacting with Youdu IM system.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		// Load configuration
+		// 加载配置
 		cfg, err := config.Load()
 		if err != nil {
-			return fmt.Errorf("failed to load config: %w", err)
+			return fmt.Errorf("加载配置失败: %w", err)
 		}
 
-		// Validate configuration
+		// 验证配置
 		if err := cfg.Validate(); err != nil {
-			return fmt.Errorf("invalid config: %w", err)
+			return fmt.Errorf("配置无效: %w\n提示：请检查 config.yaml 文件或设置环境变量", err)
 		}
 
-		// Create adapter
+		// 创建适配器
 		youduAdapter, err = adapter.New(cfg)
 		if err != nil {
-			return fmt.Errorf("failed to create adapter: %w", err)
+			return fmt.Errorf("创建适配器失败: %w", err)
 		}
 
 		return nil

@@ -2,6 +2,7 @@ package adapter
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/addcnos/youdu/v2"
 )
@@ -20,6 +21,14 @@ type SendTextMessageOutput struct {
 
 // SendTextMessage sends a text message
 func (a *Adapter) SendTextMessage(ctx context.Context, input SendTextMessageInput) (*SendTextMessageOutput, error) {
+	// 验证输入
+	if input.ToUser == "" && input.ToDept == "" {
+		return nil, fmt.Errorf("必须指定接收者：to_user 或 to_dept 至少填写一个")
+	}
+	if input.Content == "" {
+		return nil, fmt.Errorf("消息内容不能为空")
+	}
+
 	req := youdu.TextMessageRequest{
 		ToUser:  input.ToUser,
 		ToDept:  input.ToDept,
@@ -31,7 +40,7 @@ func (a *Adapter) SendTextMessage(ctx context.Context, input SendTextMessageInpu
 
 	_, err := a.client.SendTextMessage(ctx, req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("发送文本消息失败: %w\n提示：请检查用户ID(%s)是否正确，以及应用是否有发送消息的权限", err, input.ToUser)
 	}
 
 	return &SendTextMessageOutput{

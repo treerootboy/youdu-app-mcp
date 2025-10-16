@@ -38,3 +38,8 @@ func (a *Adapter) Close() error {
 func (a *Adapter) Context() context.Context {
 	return context.Background()
 }
+
+// GetConfig 返回配置信息
+func (a *Adapter) GetConfig() *config.Config {
+	return a.config
+}
