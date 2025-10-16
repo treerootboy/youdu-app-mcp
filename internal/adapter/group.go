@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/addcnos/youdu/v2"
+	"github.com/yourusername/youdu-app-mcp/internal/permission"
 )
 
 // GetGroupListInput represents input for getting group list
@@ -18,6 +19,11 @@ type GetGroupListOutput struct {
 
 // GetGroupList retrieves the list of groups for a user
 func (a *Adapter) GetGroupList(ctx context.Context, input GetGroupListInput) (*GetGroupListOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceGroup, permission.ActionRead); err != nil {
+		return nil, err
+	}
+
 	resp, err := a.client.GetGroupList(ctx, input.UserID)
 	if err != nil {
 		return nil, err
@@ -40,6 +46,11 @@ type GetGroupInfoOutput struct {
 
 // GetGroupInfo retrieves information about a specific group
 func (a *Adapter) GetGroupInfo(ctx context.Context, input GetGroupInfoInput) (*GetGroupInfoOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceGroup, permission.ActionRead); err != nil {
+		return nil, err
+	}
+
 	resp, err := a.client.GetGroupInfo(ctx, input.GroupID)
 	if err != nil {
 		return nil, err
@@ -62,6 +73,11 @@ type CreateGroupOutput struct {
 
 // CreateGroup creates a new group
 func (a *Adapter) CreateGroup(ctx context.Context, input CreateGroupInput) (*CreateGroupOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceGroup, permission.ActionCreate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.CreateGroupRequest{
 		Name: input.Name,
 	}
@@ -89,6 +105,11 @@ type UpdateGroupOutput struct {
 
 // UpdateGroup updates an existing group
 func (a *Adapter) UpdateGroup(ctx context.Context, input UpdateGroupInput) (*UpdateGroupOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceGroup, permission.ActionUpdate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.UpdateGroupRequest{
 		ID:   input.GroupID,
 		Name: input.Name,
@@ -116,6 +137,11 @@ type DeleteGroupOutput struct {
 
 // DeleteGroup deletes a group
 func (a *Adapter) DeleteGroup(ctx context.Context, input DeleteGroupInput) (*DeleteGroupOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceGroup, permission.ActionDelete); err != nil {
+		return nil, err
+	}
+
 	_, err := a.client.DeleteGroup(ctx, input.GroupID)
 	if err != nil {
 		return nil, err
@@ -139,6 +165,11 @@ type AddGroupMemberOutput struct {
 
 // AddGroupMember adds members to a group
 func (a *Adapter) AddGroupMember(ctx context.Context, input AddGroupMemberInput) (*AddGroupMemberOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceGroup, permission.ActionUpdate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.GroupUpdateMemberRequest{
 		ID:       input.GroupID,
 		UserList: input.Members,
@@ -167,6 +198,11 @@ type DelGroupMemberOutput struct {
 
 // DelGroupMember removes members from a group
 func (a *Adapter) DelGroupMember(ctx context.Context, input DelGroupMemberInput) (*DelGroupMemberOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceGroup, permission.ActionUpdate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.GroupUpdateMemberRequest{
 		ID:       input.GroupID,
 		UserList: input.Members,

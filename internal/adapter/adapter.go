@@ -5,6 +5,7 @@ import (
 
 	"github.com/addcnos/youdu/v2"
 	"github.com/yourusername/youdu-app-mcp/internal/config"
+	"github.com/yourusername/youdu-app-mcp/internal/permission"
 )
 
 // Adapter 封装有度客户端并提供简化的方法
@@ -42,4 +43,9 @@ func (a *Adapter) Context() context.Context {
 // GetConfig 返回配置信息
 func (a *Adapter) GetConfig() *config.Config {
 	return a.config
+}
+
+// checkPermission 检查操作权限
+func (a *Adapter) checkPermission(resource permission.Resource, action permission.Action) error {
+	return permission.CheckGlobal(resource, action)
 }

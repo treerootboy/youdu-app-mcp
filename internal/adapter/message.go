@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/addcnos/youdu/v2"
+	"github.com/yourusername/youdu-app-mcp/internal/permission"
 )
 
 // SendTextMessageInput represents input for sending text message
@@ -21,6 +22,11 @@ type SendTextMessageOutput struct {
 
 // SendTextMessage sends a text message
 func (a *Adapter) SendTextMessage(ctx context.Context, input SendTextMessageInput) (*SendTextMessageOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceMessage, permission.ActionCreate); err != nil {
+		return nil, err
+	}
+
 	// 验证输入
 	if input.ToUser == "" && input.ToDept == "" {
 		return nil, fmt.Errorf("必须指定接收者：to_user 或 to_dept 至少填写一个")
@@ -62,6 +68,11 @@ type SendImageMessageOutput struct {
 
 // SendImageMessage sends an image message
 func (a *Adapter) SendImageMessage(ctx context.Context, input SendImageMessageInput) (*SendImageMessageOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceMessage, permission.ActionCreate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.ImageMessageRequest{
 		ToUser:  input.ToUser,
 		ToDept:  input.ToDept,
@@ -95,6 +106,11 @@ type SendFileMessageOutput struct {
 
 // SendFileMessage sends a file message
 func (a *Adapter) SendFileMessage(ctx context.Context, input SendFileMessageInput) (*SendFileMessageOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceMessage, permission.ActionCreate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.FileMessageRequest{
 		ToUser:  input.ToUser,
 		ToDept:  input.ToDept,
@@ -130,6 +146,11 @@ type SendLinkMessageOutput struct {
 
 // SendLinkMessage sends a link message
 func (a *Adapter) SendLinkMessage(ctx context.Context, input SendLinkMessageInput) (*SendLinkMessageOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceMessage, permission.ActionCreate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.LinkMessageRequest{
 		ToUser:  input.ToUser,
 		ToDept:  input.ToDept,
@@ -167,6 +188,11 @@ type SendSysMessageOutput struct {
 
 // SendSysMessage sends a system message
 func (a *Adapter) SendSysMessage(ctx context.Context, input SendSysMessageInput) (*SendSysMessageOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceMessage, permission.ActionCreate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.MessageSysMessageRequest{
 		ToUser:  input.ToUser,
 		ToDept:  input.ToDept,

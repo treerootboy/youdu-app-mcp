@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/addcnos/youdu/v2"
+	"github.com/yourusername/youdu-app-mcp/internal/permission"
 )
 
 // DeptListInput 获取部门列表的输入参数
@@ -18,6 +19,11 @@ type DeptListOutput struct {
 
 // GetDeptList 获取部门列表
 func (a *Adapter) GetDeptList(ctx context.Context, input DeptListInput) (*DeptListOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceDept, permission.ActionRead); err != nil {
+		return nil, err
+	}
+
 	resp, err := a.client.GetDeptList(ctx, input.DeptID)
 	if err != nil {
 		return nil, err
@@ -40,6 +46,11 @@ type DeptUserListOutput struct {
 
 // GetDeptUserList 获取部门中的用户列表
 func (a *Adapter) GetDeptUserList(ctx context.Context, input DeptUserListInput) (*DeptUserListOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceDept, permission.ActionRead); err != nil {
+		return nil, err
+	}
+
 	resp, err := a.client.GetDeptUserList(ctx, input.DeptID)
 	if err != nil {
 		return nil, err
@@ -62,6 +73,11 @@ type DeptAliasListOutput struct {
 
 // GetDeptAliasList 获取部门别名列表
 func (a *Adapter) GetDeptAliasList(ctx context.Context, input DeptAliasListInput) (*DeptAliasListOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceDept, permission.ActionRead); err != nil {
+		return nil, err
+	}
+
 	resp, err := a.client.GetDeptAliasList(ctx)
 	if err != nil {
 		return nil, err
@@ -87,6 +103,11 @@ type CreateDeptOutput struct {
 
 // CreateDept 创建新部门
 func (a *Adapter) CreateDept(ctx context.Context, input CreateDeptInput) (*CreateDeptOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceDept, permission.ActionCreate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.CreateDeptRequest{
 		Name:     input.Name,
 		ParentID: input.ParentID,
@@ -120,6 +141,11 @@ type UpdateDeptOutput struct {
 
 // UpdateDept 更新现有部门
 func (a *Adapter) UpdateDept(ctx context.Context, input UpdateDeptInput) (*UpdateDeptOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceDept, permission.ActionUpdate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.UpdateDeptRequest{
 		ID:       input.DeptID,
 		Name:     input.Name,
@@ -150,6 +176,11 @@ type DeleteDeptOutput struct {
 
 // DeleteDept 删除部门
 func (a *Adapter) DeleteDept(ctx context.Context, input DeleteDeptInput) (*DeleteDeptOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceDept, permission.ActionDelete); err != nil {
+		return nil, err
+	}
+
 	_, err := a.client.DeleteDept(ctx, input.DeptID)
 	if err != nil {
 		return nil, err

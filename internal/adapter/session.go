@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/addcnos/youdu/v2"
+	"github.com/yourusername/youdu-app-mcp/internal/permission"
 )
 
 // CreateSessionInput represents input for creating a session
@@ -21,6 +22,11 @@ type CreateSessionOutput struct {
 
 // CreateSession creates a new session
 func (a *Adapter) CreateSession(ctx context.Context, input CreateSessionInput) (*CreateSessionOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceSession, permission.ActionCreate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.CreateSessionRequest{
 		Title:   input.Title,
 		Creator: input.Creator,
@@ -50,6 +56,11 @@ type GetSessionOutput struct {
 
 // GetSession retrieves session information
 func (a *Adapter) GetSession(ctx context.Context, input GetSessionInput) (*GetSessionOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceSession, permission.ActionRead); err != nil {
+		return nil, err
+	}
+
 	resp, err := a.client.GetSession(ctx, input.SessionID)
 	if err != nil {
 		return nil, err
@@ -74,6 +85,11 @@ type UpdateSessionOutput struct {
 
 // UpdateSession updates an existing session
 func (a *Adapter) UpdateSession(ctx context.Context, input UpdateSessionInput) (*UpdateSessionOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceSession, permission.ActionUpdate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.UpdateSessionRequest{
 		SessionID: input.SessionID,
 		Title:     input.Title,
@@ -104,6 +120,11 @@ type SendTextSessionMessageOutput struct {
 
 // SendTextSessionMessage sends a text message to a session
 func (a *Adapter) SendTextSessionMessage(ctx context.Context, input SendTextSessionMessageInput) (*SendTextSessionMessageOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceSession, permission.ActionUpdate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.TextSessionMessageRequest{
 		SessionID: input.SessionID,
 		Sender:    input.Sender,
@@ -137,6 +158,11 @@ type SendImageSessionMessageOutput struct {
 
 // SendImageSessionMessage sends an image message to a session
 func (a *Adapter) SendImageSessionMessage(ctx context.Context, input SendImageSessionMessageInput) (*SendImageSessionMessageOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceSession, permission.ActionUpdate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.ImageSessionMessageRequest{
 		SessionID: input.SessionID,
 		Sender:    input.Sender,
@@ -170,6 +196,11 @@ type SendFileSessionMessageOutput struct {
 
 // SendFileSessionMessage sends a file message to a session
 func (a *Adapter) SendFileSessionMessage(ctx context.Context, input SendFileSessionMessageInput) (*SendFileSessionMessageOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceSession, permission.ActionUpdate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.FileSessionMessageRequest{
 		SessionID: input.SessionID,
 		Sender:    input.Sender,

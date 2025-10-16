@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/addcnos/youdu/v2"
+	"github.com/yourusername/youdu-app-mcp/internal/permission"
 )
 
 // GetUserInput represents input for getting user information
@@ -18,6 +19,11 @@ type GetUserOutput struct {
 
 // GetUser retrieves user information
 func (a *Adapter) GetUser(ctx context.Context, input GetUserInput) (*GetUserOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceUser, permission.ActionRead); err != nil {
+		return nil, err
+	}
+
 	resp, err := a.client.GetUser(ctx, input.UserID)
 	if err != nil {
 		return nil, err
@@ -47,6 +53,11 @@ type CreateUserOutput struct {
 
 // CreateUser creates a new user
 func (a *Adapter) CreateUser(ctx context.Context, input CreateUserInput) (*CreateUserOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceUser, permission.ActionCreate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.CreateUserRequest{
 		UserID: input.UserID,
 		Name:   input.Name,
@@ -84,6 +95,11 @@ type UpdateUserOutput struct {
 
 // UpdateUser updates an existing user
 func (a *Adapter) UpdateUser(ctx context.Context, input UpdateUserInput) (*UpdateUserOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceUser, permission.ActionUpdate); err != nil {
+		return nil, err
+	}
+
 	req := youdu.UpdateUserRequest{
 		UserID: input.UserID,
 		Name:   input.Name,
@@ -115,6 +131,11 @@ type DeleteUserOutput struct {
 
 // DeleteUser deletes a user
 func (a *Adapter) DeleteUser(ctx context.Context, input DeleteUserInput) (*DeleteUserOutput, error) {
+	// 权限检查
+	if err := a.checkPermission(permission.ResourceUser, permission.ActionDelete); err != nil {
+		return nil, err
+	}
+
 	_, err := a.client.DeleteUser(ctx, input.UserID)
 	if err != nil {
 		return nil, err

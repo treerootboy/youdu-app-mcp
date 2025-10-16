@@ -35,12 +35,27 @@ func Load() (*Config, error) {
 	viper.SetDefault("youdu.addr", "http://localhost:7080")
 	viper.SetDefault("youdu.buin", 0)
 
-	// 读取配置文件（如果存在）
+	// 读取主配置文件（如果存在）
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			return nil, fmt.Errorf("读取配置失败: %w", err)
 		}
 		// 配置文件未找到；使用默认值和环境变量
+	}
+
+	// 尝试读取权限配置文件
+	permViper := viper.New()
+	permViper.SetConfigName("permission")
+	permViper.SetConfigType("yaml")
+	permViper.AddConfigPath(".")
+	permViper.AddConfigPath("$HOME/.youdu")
+	permViper.AddConfigPath("/etc/youdu")
+
+	if err := permViper.ReadInConfig(); err == nil {
+		// 合并权限配置到主配置
+		if err := viper.MergeConfigMap(permViper.AllSettings()); err != nil {
+			return nil, fmt.Errorf("合并权限配置失败: %w", err)
+		}
 	}
 
 	var cfg Config
