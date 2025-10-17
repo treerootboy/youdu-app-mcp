@@ -20,7 +20,6 @@ go.work
 
 # Configuration files (may contain sensitive data)
 config.yaml
-permission.yaml
 
 # IDE
 .idea/
