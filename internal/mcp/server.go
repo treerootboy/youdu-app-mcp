@@ -103,10 +103,14 @@ func (s *Server) registerTools() error {
 
 // registerTool registers a single tool with the MCP server
 func (s *Server) registerTool(name, description string, method reflect.Method, adapterValue reflect.Value, inputType, outputType reflect.Type) error {
+	// Create input schema from the input type
+	inputSchema := generateInputSchema(inputType)
+
 	// Create tool definition
 	tool := &mcp.Tool{
 		Name:        name,
 		Description: description,
+		InputSchema: inputSchema,
 	}
 
 	// Create handler function
@@ -171,4 +175,81 @@ func generateDescription(methodName string) string {
 	words = append(words, currentWord.String())
 
 	return strings.Join(words, " ")
+}
+
+// generateInputSchema generates a JSON schema for the input type
+func generateInputSchema(inputType reflect.Type) map[string]interface{} {
+	schema := map[string]interface{}{
+		"type":       "object",
+		"properties": make(map[string]interface{}),
+	}
+
+	properties := schema["properties"].(map[string]interface{})
+	required := []string{}
+
+	// Iterate through struct fields
+	for i := 0; i < inputType.NumField(); i++ {
+		field := inputType.Field(i)
+
+		// Get JSON tag
+		jsonTag := field.Tag.Get("json")
+		if jsonTag == "" || jsonTag == "-" {
+			continue
+		}
+
+		// Extract field name from JSON tag
+		fieldName := strings.Split(jsonTag, ",")[0]
+
+		// Get jsonschema tag for description and required
+		schemaTag := field.Tag.Get("jsonschema")
+		fieldSchema := map[string]interface{}{
+			"type": getJSONType(field.Type),
+		}
+
+		// Parse jsonschema tag
+		if schemaTag != "" {
+			parts := strings.Split(schemaTag, ",")
+			for _, part := range parts {
+				part = strings.TrimSpace(part)
+				if strings.HasPrefix(part, "description=") {
+					fieldSchema["description"] = strings.TrimPrefix(part, "description=")
+				} else if part == "required" {
+					required = append(required, fieldName)
+				} else if strings.HasPrefix(part, "default=") {
+					// Skip default values - MCP SDK has strict type checking
+					// Users can provide defaults in their requests
+					continue
+				}
+			}
+		}
+
+		properties[fieldName] = fieldSchema
+	}
+
+	if len(required) > 0 {
+		schema["required"] = required
+	}
+
+	return schema
+}
+
+// getJSONType returns the JSON schema type for a Go type
+func getJSONType(t reflect.Type) string {
+	switch t.Kind() {
+	case reflect.String:
+		return "string"
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return "integer"
+	case reflect.Float32, reflect.Float64:
+		return "number"
+	case reflect.Bool:
+		return "boolean"
+	case reflect.Slice, reflect.Array:
+		return "array"
+	case reflect.Map, reflect.Struct:
+		return "object"
+	default:
+		return "string"
+	}
 }
