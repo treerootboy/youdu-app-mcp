@@ -3,8 +3,6 @@ package permission
 import (
 	"fmt"
 	"sync"
-
-	"github.com/spf13/viper"
 )
 
 // Action 操作类型
@@ -28,12 +26,12 @@ const (
 	ResourceMessage Resource = "message" // 消息
 )
 
-// Permission 权限配置
+// Permission 权限配置（纯数据结构 + 业务逻辑）
 type Permission struct {
-	Enabled   bool                        `mapstructure:"enabled"`   // 是否启用权限检查
-	AllowAll  bool                        `mapstructure:"allow_all"` // 是否允许所有操作（调试用）
-	Resources map[Resource]ResourcePolicy `mapstructure:"resources"` // 资源权限策略
-	mu        sync.RWMutex
+	Enabled   bool                        // 是否启用权限检查
+	AllowAll  bool                        // 是否允许所有操作（调试用）
+	Resources map[Resource]ResourcePolicy // 资源权限策略
+	mu        sync.RWMutex                // 保护并发访问
 }
 
 // ResourcePolicy 资源权限策略
@@ -44,56 +42,22 @@ type ResourcePolicy struct {
 	Delete bool `mapstructure:"delete"` // 允许删除
 }
 
-var (
-	globalPermission *Permission
-	once             sync.Once
-)
-
-// Load 加载权限配置
-func Load() (*Permission, error) {
-	var perm Permission
-
-	// 从配置文件读取权限设置
-	if err := viper.UnmarshalKey("permission", &perm); err != nil {
-		// 如果没有配置，使用默认配置（全部允许）
-		perm = Permission{
-			Enabled:  false,
-			AllowAll: true,
-			Resources: map[Resource]ResourcePolicy{
-				ResourceDept:    {Create: true, Read: true, Update: true, Delete: true},
-				ResourceUser:    {Create: true, Read: true, Update: true, Delete: true},
-				ResourceGroup:   {Create: true, Read: true, Update: true, Delete: true},
-				ResourceSession: {Create: true, Read: true, Update: true, Delete: true},
-				ResourceMessage: {Create: true, Read: true, Update: true, Delete: true},
-			},
-		}
+// New 创建新的 Permission 实例（构造函数）
+// 配置加载逻辑已移到 config 包，此函数仅用于创建实例
+func New(enabled, allowAll bool, resources map[Resource]ResourcePolicy) *Permission {
+	// 如果未启用权限检查，自动设置为允许所有
+	if !enabled {
+		allowAll = true
 	}
 
-	// 如果未启用权限检查，设置为全部允许
-	if !perm.Enabled {
-		perm.AllowAll = true
+	return &Permission{
+		Enabled:   enabled,
+		AllowAll:  allowAll,
+		Resources: resources,
 	}
-
-	return &perm, nil
 }
 
-// GetGlobal 获取全局权限配置
-func GetGlobal() *Permission {
-	once.Do(func() {
-		perm, err := Load()
-		if err != nil {
-			// 如果加载失败，使用默认配置
-			perm = &Permission{
-				Enabled:  false,
-				AllowAll: true,
-			}
-		}
-		globalPermission = perm
-	})
-	return globalPermission
-}
-
-// Check 检查权限
+// Check 检查权限（业务逻辑）
 func (p *Permission) Check(resource Resource, action Action) error {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
@@ -129,11 +93,6 @@ func (p *Permission) Check(resource Resource, action Action) error {
 	}
 
 	return nil
-}
-
-// CheckGlobal 使用全局权限配置检查权限
-func CheckGlobal(resource Resource, action Action) error {
-	return GetGlobal().Check(resource, action)
 }
 
 // SetResourcePolicy 设置资源权限策略
