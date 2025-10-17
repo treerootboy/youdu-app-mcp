@@ -10,8 +10,9 @@ import (
 
 // Adapter 封装有度客户端并提供简化的方法
 type Adapter struct {
-	client *youdu.Client
-	config *config.Config
+	client     *youdu.Client
+	config     *config.Config
+	permission *permission.Permission // 权限实例（从 Config 获取）
 }
 
 // New 创建一个新的 Adapter 实例
@@ -24,8 +25,9 @@ func New(cfg *config.Config) (*Adapter, error) {
 	})
 
 	return &Adapter{
-		client: client,
-		config: cfg,
+		client:     client,
+		config:     cfg,
+		permission: cfg.GetPermission(), // 从 Config 获取权限配置
 	}, nil
 }
 
@@ -45,7 +47,12 @@ func (a *Adapter) GetConfig() *config.Config {
 	return a.config
 }
 
-// checkPermission 检查操作权限
+// GetPermission 返回权限配置（供 CLI 命令使用）
+func (a *Adapter) GetPermission() *permission.Permission {
+	return a.permission
+}
+
+// checkPermission 检查操作权限（使用实例方法）
 func (a *Adapter) checkPermission(resource permission.Resource, action permission.Action) error {
-	return permission.CheckGlobal(resource, action)
+	return a.permission.Check(resource, action)
 }

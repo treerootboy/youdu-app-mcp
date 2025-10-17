@@ -6,14 +6,15 @@ toolchain go1.24.9
 
 require (
 	github.com/addcnos/youdu/v2 v2.6.0
+	github.com/go-chi/chi/v5 v5.2.3
 	github.com/modelcontextprotocol/go-sdk v1.0.0
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/go-chi/chi/v5 v5.2.3 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/google/jsonschema-go v0.3.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect

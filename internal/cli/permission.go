@@ -24,7 +24,8 @@ var permStatusCmd = &cobra.Command{
 	Short: "查看权限系统状态",
 	Long:  `显示权限系统是否启用以及当前配置。`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		perm := permission.GetGlobal()
+		// 从 Adapter 获取权限配置
+		perm := youduAdapter.GetPermission()
 
 		fmt.Println("=== 权限系统状态 ===")
 		if perm.IsEnabled() {
@@ -43,7 +44,8 @@ var permListCmd = &cobra.Command{
 	Short: "列出所有资源的权限配置",
 	Long:  `显示部门、用户、群组、会话、消息的 CRUD 权限配置。`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		perm := permission.GetGlobal()
+		// 从 Adapter 获取权限配置
+		perm := youduAdapter.GetPermission()
 
 		fmt.Println("=== 资源权限配置 ===")
 		fmt.Println()
@@ -81,7 +83,7 @@ var permListCmd = &cobra.Command{
 
 		if !perm.IsEnabled() {
 			fmt.Println("提示：权限检查未启用，以上配置不生效。")
-			fmt.Println("要启用权限检查，请在 permission.yaml 中设置 enabled: true")
+			fmt.Println("要启用权限检查，请在 config.yaml 中设置 permission.enabled: true")
 		}
 
 		return nil
