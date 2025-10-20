@@ -21,16 +21,16 @@ permission:
   resources:
     # 部门权限
     dept:
-      create: true   # 允许创建部门
+      create: false   # 禁止创建部门
       read: true     # 允许读取部门信息
-      update: true   # 允许更新部门
+      update: false   # 禁止更新部门
       delete: false  # 禁止删除部门
 
     # 用户权限
     user:
-      create: true   # 允许创建用户
+      create: false   # 禁止创建用户
       read: true     # 允许读取用户信息
-      update: true   # 允许更新用户
+      update: false   # 禁止更新用户
       delete: false  # 禁止删除用户
 
     # 群组权限
