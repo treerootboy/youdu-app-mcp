@@ -20,6 +20,14 @@ var rootCmd = &cobra.Command{
 	Short: "Youdu IM CLI tool",
 	Long:  `A command-line interface for interacting with Youdu IM system.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// 跳过 token 命令的配置验证（token 命令不需要 YouDu 配置）
+		if cmd.Parent() != nil && cmd.Parent().Name() == "token" {
+			return nil
+		}
+		if cmd.Name() == "token" {
+			return nil
+		}
+
 		// 加载配置
 		cfg, err := config.Load()
 		if err != nil {

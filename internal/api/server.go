@@ -17,9 +17,10 @@ import (
 
 // Server represents the HTTP API server
 type Server struct {
-	router  chi.Router
-	adapter *adapter.Adapter
-	config  *config.Config
+	router       chi.Router
+	adapter      *adapter.Adapter
+	config       *config.Config
+	tokenEnabled bool
 }
 
 // New creates a new API server
@@ -40,10 +41,19 @@ func New(cfg *config.Config) (*Server, error) {
 	r.Use(corsMiddleware)
 	r.Use(jsonContentTypeMiddleware)
 
+	// 检查是否启用 token 认证
+	tokenEnabled := cfg.TokenManager != nil && cfg.TokenManager.Count() > 0
+
 	s := &Server{
-		router:  r,
-		adapter: adp,
-		config:  cfg,
+		router:       r,
+		adapter:      adp,
+		config:       cfg,
+		tokenEnabled: tokenEnabled,
+	}
+
+	// 添加 token 认证中间件（如果启用）
+	if tokenEnabled {
+		s.router.Use(s.tokenAuthMiddleware)
 	}
 
 	// 自动注册所有 adapter 方法为 HTTP endpoint
@@ -62,6 +72,12 @@ func (s *Server) Start(addr string) error {
 	fmt.Printf("🚀 YouDu API Server 启动在 %s\n", addr)
 	fmt.Println("📖 API 文档: GET /api/v1/endpoints")
 	fmt.Println("💚 健康检查: GET /health")
+	if s.tokenEnabled {
+		fmt.Println("🔒 Token 认证: 已启用")
+		fmt.Printf("   当前有效 token 数量: %d\n", s.config.TokenManager.Count())
+	} else {
+		fmt.Println("⚠️  Token 认证: 未启用")
+	}
 	return http.ListenAndServe(addr, s.router)
 }
 
@@ -280,6 +296,38 @@ func corsMiddleware(next http.Handler) http.Handler {
 func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// tokenAuthMiddleware 验证 token
+func (s *Server) tokenAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 跳过健康检查和 endpoints 列表
+		if r.URL.Path == "/health" || r.URL.Path == "/api/v1/endpoints" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// 从 Authorization header 获取 token
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			respondError(w, http.StatusUnauthorized, "缺少 Authorization header")
+			return
+		}
+
+		// 支持两种格式: "Bearer <token>" 或 直接 "<token>"
+		token := authHeader
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			token = strings.TrimPrefix(authHeader, "Bearer ")
+		}
+
+		// 验证 token
+		if !s.config.TokenManager.Validate(token) {
+			respondError(w, http.StatusUnauthorized, "无效的 token")
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
