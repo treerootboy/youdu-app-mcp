@@ -27,9 +27,20 @@ var rootCmd = &cobra.Command{
 		if cmd.Name() == "token" {
 			return nil
 		}
+		
+		// 跳过 serve-api 命令（它会自己加载和验证配置）
+		if cmd.Name() == "serve-api" {
+			return nil
+		}
 
 		// 加载配置
-		cfg, err := config.Load()
+		var cfg *config.Config
+		var err error
+		if cfgFile != "" {
+			cfg, err = config.LoadFromFile(cfgFile)
+		} else {
+			cfg, err = config.Load()
+		}
 		if err != nil {
 			return fmt.Errorf("加载配置失败: %w", err)
 		}

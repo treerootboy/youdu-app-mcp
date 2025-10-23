@@ -113,8 +113,16 @@ var tokenListCmd = &cobra.Command{
   youdu-cli token list --json`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// 加载配置以获取 token 管理器
-		// Token 管理不需要验证 YouDu 配置
-		cfg, err := config.Load()
+		var cfg *config.Config
+		var err error
+
+		// 如果指定了配置文件，从文件加载
+		if cfgFile != "" {
+			cfg, err = config.LoadFromFile(cfgFile)
+		} else {
+			cfg, err = config.Load()
+		}
+
 		if err != nil {
 			return fmt.Errorf("加载配置失败: %w", err)
 		}
@@ -181,8 +189,16 @@ var tokenRevokeCmd = &cobra.Command{
 		}
 
 		// 加载配置以获取 token 管理器
-		// Token 管理不需要验证 YouDu 配置
-		cfg, err := config.Load()
+		var cfg *config.Config
+		var err error
+
+		// 如果指定了配置文件，从文件加载
+		if cfgFile != "" {
+			cfg, err = config.LoadFromFile(cfgFile)
+		} else {
+			cfg, err = config.Load()
+		}
+
 		if err != nil {
 			return fmt.Errorf("加载配置失败: %w", err)
 		}
