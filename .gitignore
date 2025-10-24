@@ -21,6 +21,11 @@ go.work
 # Configuration files (may contain sensitive data)
 config.yaml
 
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
 # IDE
 .idea/
 .vscode/
