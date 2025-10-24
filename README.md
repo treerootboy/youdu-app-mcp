@@ -46,11 +46,31 @@ go build -o bin/youdu-cli ./cmd/youdu-cli
 在项目根目录或 `~/.youdu/config.yaml` 创建 `config.yaml` 文件：
 
 ```yaml
+# 有度服务器配置
 youdu:
   addr: "http://your-youdu-server:7080"
   buin: 123456789
   app_id: "your-app-id"
   aes_key: "your-aes-key"
+
+# 数据库配置（用于 Token 存储）
+db:
+  path: "./youdu.db"  # SQLite 数据库文件路径
+
+# Token 认证配置
+token:
+  enabled: false  # 是否启用 token 认证
+
+# 权限配置
+permission:
+  enabled: true
+  allow_all: false
+  resources:
+    user:
+      create: false
+      read: true
+      update: false
+      delete: false
 ```
 
 或使用环境变量：
@@ -150,27 +170,27 @@ HTTP API 服务器将所有适配器方法自动暴露为 RESTful API endpoints�
 
 #### Token 认证
 
-HTTP API 支持 Token 认证功能，可以保护 API 不被未授权访问。
+HTTP API 支持 Token 认证功能，可以保护 API 不被未授权访问。Token 使用 SQLite 数据库持久化存储。
 
 ##### 启用 Token 认证
 
-1. 在 `config.yaml` 中启用 token 认证：
+1. 在 `config.yaml` 中配置数据库和启用 token 认证：
 
 ```yaml
+# 数据库配置
+db:
+  path: "./youdu.db"  # SQLite 数据库文件路径
+
+# Token 认证配置
 token:
-  enabled: true
-  tokens:
-    - id: "token001"
-      value: "your-token-value"
-      description: "API access token"
-      created_at: "2025-01-01T00:00:00Z"
+  enabled: true  # 启用 token 认证
 ```
 
 2. 重启 API 服务器
 
 ##### 生成 Token
 
-使用 CLI 命令生成新的 token：
+使用 CLI 命令生成新的 token，自动保存到数据库：
 
 ```bash
 # 生成永久 token
@@ -183,13 +203,15 @@ token:
 ./bin/youdu-cli token generate --description "Test Token" --json
 ```
 
+生成的 token 会自动保存到 SQLite 数据库中，无需手动添加到配置文件。
+
 ##### 管理 Token
 
 ```bash
 # 列出所有 token
 ./bin/youdu-cli token list
 
-# 撤销 token
+# 撤销 token（从数据库中永久删除）
 ./bin/youdu-cli token revoke --id token001
 ```
 
@@ -214,7 +236,8 @@ curl -X POST http://localhost:8080/api/v1/send_text_message \
 **注意**：
 - 健康检查 (`/health`) 和 API 列表 (`/api/v1/endpoints`) 不需要 token
 - 所有业务 API 调用都需要有效的 token
-- Token 从配置文件加载，修改配置后需要重启服务器
+- Token 存储在 SQLite 数据库中，持久化保存
+- 修改 token（添加/删除）后无需重启服务器（动态生效）
 
 #### API 端点规范
 
@@ -335,15 +358,21 @@ youdu-app-mcp/
 │   ├── cli/                # CLI 实现
 │   │   ├── root.go         # 根命令
 │   │   ├── generator.go    # 自动生成命令
-│   │   └── serve_api.go    # API 服务器命令
+│   │   ├── serve_api.go    # API 服务器命令
+│   │   └── token.go        # Token 管理命令
 │   ├── mcp/                # MCP 服务器实现
 │   │   └── server.go       # 自动注册工具
 │   ├── permission/         # 权限控制
 │   │   └── permission.go   # 权限管理系统
+│   ├── token/              # Token 管理
+│   │   └── token.go        # Token 管理器（SQLite 存储）
+│   ├── database/           # 数据库管理
+│   │   └── database.go     # SQLite 数据库封装
 │   └── config/             # 配置管理
 │       └── config.go       # Viper 配置
 ├── bin/                    # 编译后的二进制文件
 ├── config.yaml.example     # 配置示例
+├── youdu.db                # SQLite 数据库（自动创建）
 ├── go.mod
 ├── go.sum
 └── README.md
