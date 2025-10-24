@@ -9,8 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/yourusername/youdu-app-mcp/internal/config"
-	"github.com/yourusername/youdu-app-mcp/internal/token"
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -40,8 +38,20 @@ var tokenGenerateCmd = &cobra.Command{
   youdu-cli token generate --description "Temporary token" --expires-in 24h
   youdu-cli token generate --description "Test token" --json`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// 直接创建 token 管理器，无需加载完整配置
-		mgr := token.NewManager()
+		// 加载配置以获取数据库连接
+		var cfg *config.Config
+		var err error
+
+		// 如果指定了配置文件，从文件加载
+		if cfgFile != "" {
+			cfg, err = config.LoadFromFile(cfgFile)
+		} else {
+			cfg, err = config.Load()
+		}
+
+		if err != nil {
+			return fmt.Errorf("加载配置失败: %w", err)
+		}
 
 		// 解析过期时间
 		var expiresIn *time.Duration
@@ -54,7 +64,7 @@ var tokenGenerateCmd = &cobra.Command{
 		}
 
 		// 生成 token
-		token, err := mgr.Generate(tokenDescription, expiresIn)
+		token, err := cfg.TokenManager.Generate(tokenDescription, expiresIn)
 		if err != nil {
 			return fmt.Errorf("生成 token 失败: %w", err)
 		}
@@ -76,26 +86,9 @@ var tokenGenerateCmd = &cobra.Command{
 				fmt.Printf("  Expires At:  永不过期\n")
 			}
 
-			fmt.Println("\n⚠️  请将以下内容添加到 config.yaml 的 token.tokens 列表中:")
-			fmt.Println()
-
-			yamlData := map[string]interface{}{
-				"id":          token.ID,
-				"value":       token.Value,
-				"description": token.Description,
-				"created_at":  token.CreatedAt.Format(time.RFC3339),
-			}
-			if token.ExpiresAt != nil {
-				yamlData["expires_at"] = token.ExpiresAt.Format(time.RFC3339)
-			}
-
-			yamlBytes, _ := yaml.Marshal(yamlData)
-			fmt.Println(string(yamlBytes))
-
 			fmt.Println("\n💡 提示:")
-			fmt.Println("  1. 将上述 token 信息复制到 config.yaml")
-			fmt.Println("  2. 设置 token.enabled: true")
-			fmt.Println("  3. 重启 API 服务器或使用 'youdu-cli token reload' 动态加载")
+			fmt.Println("  Token 已保存到数据库中。")
+			fmt.Println("  确保配置文件中 token.enabled 设置为 true 以启用认证。")
 		}
 
 		return nil
@@ -179,7 +172,7 @@ var tokenRevokeCmd = &cobra.Command{
 	Short: "撤销 token",
 	Long: `通过 ID 撤销一个 token。
 
-注意: 此命令只从运行时内存中撤销 token，需要手动从配置文件中删除。
+Token 将从数据库中永久删除。
 
 示例:
   youdu-cli token revoke --id abc123`,
@@ -209,7 +202,6 @@ var tokenRevokeCmd = &cobra.Command{
 		}
 
 		fmt.Printf("✅ Token %s 已撤销\n", tokenID)
-		fmt.Println("\n⚠️  请记得从 config.yaml 中删除此 token")
 
 		return nil
 	},

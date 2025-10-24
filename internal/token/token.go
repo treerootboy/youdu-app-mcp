@@ -2,9 +2,9 @@ package token
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"encoding/base64"
 	"fmt"
-	"sync"
 	"time"
 )
 
@@ -19,22 +19,19 @@ type Token struct {
 
 // Manager 管理所有 token
 type Manager struct {
-	mu     sync.RWMutex
-	tokens map[string]*Token // key 为 token value
+	db *sql.DB // SQLite 数据库连接
 }
 
 // NewManager 创建新的 token 管理器
-func NewManager() *Manager {
+// db 参数可以为 nil，此时将使用内存模式（仅用于测试）
+func NewManager(db *sql.DB) *Manager {
 	return &Manager{
-		tokens: make(map[string]*Token),
+		db: db,
 	}
 }
 
 // Generate 生成新的 token
 func (m *Manager) Generate(description string, expiresIn *time.Duration) (*Token, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	// 生成随机 token
 	tokenValue, err := generateRandomToken(32)
 	if err != nil {
@@ -60,17 +57,18 @@ func (m *Manager) Generate(description string, expiresIn *time.Duration) (*Token
 		token.ExpiresAt = &expiresAt
 	}
 
-	// 存储 token
-	m.tokens[token.Value] = token
+	// 存储 token 到数据库
+	if m.db != nil {
+		if err := m.saveToken(token); err != nil {
+			return nil, fmt.Errorf("保存 token 失败: %w", err)
+		}
+	}
 
 	return token, nil
 }
 
 // Add 添加已存在的 token (从配置文件加载)
 func (m *Manager) Add(token *Token) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	if token.Value == "" {
 		return fmt.Errorf("token value 不能为空")
 	}
@@ -89,22 +87,31 @@ func (m *Manager) Add(token *Token) error {
 		token.CreatedAt = time.Now()
 	}
 
-	m.tokens[token.Value] = token
+	// 保存到数据库
+	if m.db != nil {
+		return m.saveToken(token)
+	}
+
 	return nil
 }
 
 // Validate 验证 token 是否有效
 func (m *Manager) Validate(tokenValue string) bool {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	if m.db == nil {
+		return false
+	}
 
-	token, exists := m.tokens[tokenValue]
-	if !exists {
+	var expiresAt sql.NullTime
+	err := m.db.QueryRow(`
+		SELECT expires_at FROM tokens WHERE value = ?
+	`, tokenValue).Scan(&expiresAt)
+
+	if err != nil {
 		return false
 	}
 
 	// 检查是否过期
-	if token.ExpiresAt != nil && time.Now().After(*token.ExpiresAt) {
+	if expiresAt.Valid && time.Now().After(expiresAt.Time) {
 		return false
 	}
 
@@ -113,40 +120,87 @@ func (m *Manager) Validate(tokenValue string) bool {
 
 // Revoke 撤销 token
 func (m *Manager) Revoke(tokenValue string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	if m.db == nil {
+		return fmt.Errorf("数据库未初始化")
+	}
 
-	if _, exists := m.tokens[tokenValue]; !exists {
+	result, err := m.db.Exec(`DELETE FROM tokens WHERE value = ?`, tokenValue)
+	if err != nil {
+		return fmt.Errorf("撤销 token 失败: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("检查删除结果失败: %w", err)
+	}
+
+	if rowsAffected == 0 {
 		return fmt.Errorf("token 不存在")
 	}
 
-	delete(m.tokens, tokenValue)
 	return nil
 }
 
 // RevokeByID 通过 ID 撤销 token
 func (m *Manager) RevokeByID(tokenID string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	for value, token := range m.tokens {
-		if token.ID == tokenID {
-			delete(m.tokens, value)
-			return nil
-		}
+	if m.db == nil {
+		return fmt.Errorf("数据库未初始化")
 	}
 
-	return fmt.Errorf("token ID %s 不存在", tokenID)
+	result, err := m.db.Exec(`DELETE FROM tokens WHERE id = ?`, tokenID)
+	if err != nil {
+		return fmt.Errorf("撤销 token 失败: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("检查删除结果失败: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("token ID %s 不存在", tokenID)
+	}
+
+	return nil
 }
 
 // List 列出所有 token
 func (m *Manager) List() []*Token {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	if m.db == nil {
+		return []*Token{}
+	}
 
-	tokens := make([]*Token, 0, len(m.tokens))
-	for _, token := range m.tokens {
-		tokens = append(tokens, token)
+	rows, err := m.db.Query(`
+		SELECT id, value, description, created_at, expires_at
+		FROM tokens
+		ORDER BY created_at DESC
+	`)
+	if err != nil {
+		return []*Token{}
+	}
+	defer rows.Close()
+
+	var tokens []*Token
+	for rows.Next() {
+		var token Token
+		var expiresAt sql.NullTime
+
+		err := rows.Scan(
+			&token.ID,
+			&token.Value,
+			&token.Description,
+			&token.CreatedAt,
+			&expiresAt,
+		)
+		if err != nil {
+			continue
+		}
+
+		if expiresAt.Valid {
+			token.ExpiresAt = &expiresAt.Time
+		}
+
+		tokens = append(tokens, &token)
 	}
 
 	return tokens
@@ -154,41 +208,103 @@ func (m *Manager) List() []*Token {
 
 // Get 通过 value 获取 token
 func (m *Manager) Get(tokenValue string) (*Token, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	if m.db == nil {
+		return nil, false
+	}
 
-	token, exists := m.tokens[tokenValue]
-	return token, exists
+	var token Token
+	var expiresAt sql.NullTime
+
+	err := m.db.QueryRow(`
+		SELECT id, value, description, created_at, expires_at
+		FROM tokens
+		WHERE value = ?
+	`, tokenValue).Scan(
+		&token.ID,
+		&token.Value,
+		&token.Description,
+		&token.CreatedAt,
+		&expiresAt,
+	)
+
+	if err != nil {
+		return nil, false
+	}
+
+	if expiresAt.Valid {
+		token.ExpiresAt = &expiresAt.Time
+	}
+
+	return &token, true
 }
 
 // GetByID 通过 ID 获取 token
 func (m *Manager) GetByID(tokenID string) (*Token, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	for _, token := range m.tokens {
-		if token.ID == tokenID {
-			return token, true
-		}
+	if m.db == nil {
+		return nil, false
 	}
 
-	return nil, false
+	var token Token
+	var expiresAt sql.NullTime
+
+	err := m.db.QueryRow(`
+		SELECT id, value, description, created_at, expires_at
+		FROM tokens
+		WHERE id = ?
+	`, tokenID).Scan(
+		&token.ID,
+		&token.Value,
+		&token.Description,
+		&token.CreatedAt,
+		&expiresAt,
+	)
+
+	if err != nil {
+		return nil, false
+	}
+
+	if expiresAt.Valid {
+		token.ExpiresAt = &expiresAt.Time
+	}
+
+	return &token, true
 }
 
 // Clear 清除所有 token
 func (m *Manager) Clear() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	m.tokens = make(map[string]*Token)
+	if m.db != nil {
+		m.db.Exec(`DELETE FROM tokens`)
+	}
 }
 
 // Count 返回 token 数量
 func (m *Manager) Count() int {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	if m.db == nil {
+		return 0
+	}
 
-	return len(m.tokens)
+	var count int
+	err := m.db.QueryRow(`SELECT COUNT(*) FROM tokens`).Scan(&count)
+	if err != nil {
+		return 0
+	}
+
+	return count
+}
+
+// saveToken 保存 token 到数据库
+func (m *Manager) saveToken(token *Token) error {
+	var expiresAt interface{}
+	if token.ExpiresAt != nil {
+		expiresAt = token.ExpiresAt
+	}
+
+	_, err := m.db.Exec(`
+		INSERT OR REPLACE INTO tokens (id, value, description, created_at, expires_at)
+		VALUES (?, ?, ?, ?, ?)
+	`, token.ID, token.Value, token.Description, token.CreatedAt, expiresAt)
+
+	return err
 }
 
 // generateRandomToken 生成指定字节长度的随机 token
