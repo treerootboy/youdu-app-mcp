@@ -9,6 +9,11 @@ youdu:
   # AES加密密钥
   aes_key: "your-aes-key"
 
+# 数据库配置
+db:
+  # 数据库文件路径（SQLite）
+  path: "./youdu.db"
+
 # 权限配置
 permission:
   # 是否启用权限检查（true=启用，false=禁用）
@@ -59,14 +64,3 @@ token:
   # 是否启用 token 认证（true=启用，false=禁用）
   enabled: false
 
-  # 预定义的 token 列表
-  # 建议使用 CLI 命令生成 token: youdu-cli token generate
-  tokens:
-    # - id: "abc123"
-    #   value: "your-token-value-here"
-    #   description: "API access token for service A"
-    #   created_at: "2024-01-01T00:00:00Z"
-    # - id: "def456"
-    #   value: "another-token-value"
-    #   description: "API access token for service B"
-    #   created_at: "2024-01-01T00:00:00Z"

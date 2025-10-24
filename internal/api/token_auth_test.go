@@ -2,10 +2,15 @@ package api
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
+
+	_ "modernc.org/sqlite"
 
 	"github.com/yourusername/youdu-app-mcp/internal/config"
 	"github.com/yourusername/youdu-app-mcp/internal/permission"
@@ -24,7 +29,44 @@ func createTestPermission() *permission.Permission {
 	return permission.New(false, true, resources)
 }
 
+// setupTestDB creates a temporary test database
+func setupTestDB(t *testing.T) (*sql.DB, func()) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test.db")
+
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatalf("打开测试数据库失败: %v", err)
+	}
+
+	// 初始化表结构
+	schema := `
+	CREATE TABLE IF NOT EXISTS tokens (
+		id TEXT PRIMARY KEY,
+		value TEXT UNIQUE NOT NULL,
+		description TEXT NOT NULL,
+		created_at DATETIME NOT NULL,
+		expires_at DATETIME
+	);
+	`
+	_, err = db.Exec(schema)
+	if err != nil {
+		db.Close()
+		t.Fatalf("初始化数据库结构失败: %v", err)
+	}
+
+	cleanup := func() {
+		db.Close()
+		os.RemoveAll(tmpDir)
+	}
+
+	return db, cleanup
+}
+
 func TestTokenAuthMiddleware_NoToken(t *testing.T) {
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
 	// 创建配置和 token 管理器
 	cfg := &config.Config{
 		Youdu: config.YouduConfig{
@@ -34,7 +76,7 @@ func TestTokenAuthMiddleware_NoToken(t *testing.T) {
 			AesKey: "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=",
 		},
 		Permission:   createTestPermission(),
-		TokenManager: token.NewManager(),
+		TokenManager: token.NewManager(db),
 	}
 
 	// 添加一个 token
@@ -84,6 +126,9 @@ func TestTokenAuthMiddleware_NoToken(t *testing.T) {
 }
 
 func TestTokenAuthMiddleware_InvalidToken(t *testing.T) {
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
 	// 创建配置和 token 管理器
 	cfg := &config.Config{
 		Youdu: config.YouduConfig{
@@ -93,7 +138,7 @@ func TestTokenAuthMiddleware_InvalidToken(t *testing.T) {
 			AesKey: "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=",
 		},
 		Permission:   createTestPermission(),
-		TokenManager: token.NewManager(),
+		TokenManager: token.NewManager(db),
 	}
 
 	// 添加一个 token
@@ -144,6 +189,9 @@ func TestTokenAuthMiddleware_InvalidToken(t *testing.T) {
 }
 
 func TestTokenAuthMiddleware_ValidToken(t *testing.T) {
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
 	// 创建配置和 token 管理器
 	cfg := &config.Config{
 		Youdu: config.YouduConfig{
@@ -153,7 +201,7 @@ func TestTokenAuthMiddleware_ValidToken(t *testing.T) {
 			AesKey: "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=",
 		},
 		Permission:   createTestPermission(),
-		TokenManager: token.NewManager(),
+		TokenManager: token.NewManager(db),
 	}
 
 	// 添加一个 token
@@ -191,6 +239,9 @@ func TestTokenAuthMiddleware_ValidToken(t *testing.T) {
 }
 
 func TestTokenAuthMiddleware_ValidTokenWithoutBearer(t *testing.T) {
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
 	// 创建配置和 token 管理器
 	cfg := &config.Config{
 		Youdu: config.YouduConfig{
@@ -200,7 +251,7 @@ func TestTokenAuthMiddleware_ValidTokenWithoutBearer(t *testing.T) {
 			AesKey: "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=",
 		},
 		Permission:   createTestPermission(),
-		TokenManager: token.NewManager(),
+		TokenManager: token.NewManager(db),
 	}
 
 	// 添加一个 token
@@ -238,6 +289,9 @@ func TestTokenAuthMiddleware_ValidTokenWithoutBearer(t *testing.T) {
 }
 
 func TestHealthEndpoint_NoTokenRequired(t *testing.T) {
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
 	// 创建配置和 token 管理器
 	cfg := &config.Config{
 		Youdu: config.YouduConfig{
@@ -247,7 +301,7 @@ func TestHealthEndpoint_NoTokenRequired(t *testing.T) {
 			AesKey: "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=",
 		},
 		Permission:   createTestPermission(),
-		TokenManager: token.NewManager(),
+		TokenManager: token.NewManager(db),
 	}
 
 	// 添加一个 token
@@ -291,6 +345,9 @@ func TestHealthEndpoint_NoTokenRequired(t *testing.T) {
 }
 
 func TestEndpointsListing_NoTokenRequired(t *testing.T) {
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
 	// 创建配置和 token 管理器
 	cfg := &config.Config{
 		Youdu: config.YouduConfig{
@@ -300,7 +357,7 @@ func TestEndpointsListing_NoTokenRequired(t *testing.T) {
 			AesKey: "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=",
 		},
 		Permission:   createTestPermission(),
-		TokenManager: token.NewManager(),
+		TokenManager: token.NewManager(db),
 	}
 
 	// 添加一个 token

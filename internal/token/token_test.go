@@ -1,12 +1,54 @@
 package token
 
 import (
+	"database/sql"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
+
+	_ "modernc.org/sqlite"
 )
 
+// setupTestDB creates a temporary test database
+func setupTestDB(t *testing.T) (*sql.DB, func()) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test.db")
+
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatalf("打开测试数据库失败: %v", err)
+	}
+
+	// 初始化表结构
+	schema := `
+	CREATE TABLE IF NOT EXISTS tokens (
+		id TEXT PRIMARY KEY,
+		value TEXT UNIQUE NOT NULL,
+		description TEXT NOT NULL,
+		created_at DATETIME NOT NULL,
+		expires_at DATETIME
+	);
+	`
+	_, err = db.Exec(schema)
+	if err != nil {
+		db.Close()
+		t.Fatalf("初始化数据库结构失败: %v", err)
+	}
+
+	cleanup := func() {
+		db.Close()
+		os.RemoveAll(tmpDir)
+	}
+
+	return db, cleanup
+}
+
 func TestManager_Generate(t *testing.T) {
-	m := NewManager()
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	m := NewManager(db)
 
 	// 生成不过期的 token
 	token, err := m.Generate("test token", nil)
@@ -48,7 +90,10 @@ func TestManager_Generate(t *testing.T) {
 }
 
 func TestManager_Add(t *testing.T) {
-	m := NewManager()
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	m := NewManager(db)
 
 	token := &Token{
 		Value:       "test-value",
@@ -77,7 +122,10 @@ func TestManager_Add(t *testing.T) {
 }
 
 func TestManager_Add_EmptyValue(t *testing.T) {
-	m := NewManager()
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	m := NewManager(db)
 
 	token := &Token{
 		Description: "no value",
@@ -90,7 +138,10 @@ func TestManager_Add_EmptyValue(t *testing.T) {
 }
 
 func TestManager_Validate(t *testing.T) {
-	m := NewManager()
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	m := NewManager(db)
 
 	// 添加有效的 token
 	token, _ := m.Generate("valid token", nil)
@@ -120,7 +171,10 @@ func TestManager_Validate(t *testing.T) {
 }
 
 func TestManager_Revoke(t *testing.T) {
-	m := NewManager()
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	m := NewManager(db)
 
 	token, _ := m.Generate("to be revoked", nil)
 
@@ -143,7 +197,10 @@ func TestManager_Revoke(t *testing.T) {
 }
 
 func TestManager_RevokeByID(t *testing.T) {
-	m := NewManager()
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	m := NewManager(db)
 
 	token, _ := m.Generate("to be revoked by ID", nil)
 
@@ -166,7 +223,10 @@ func TestManager_RevokeByID(t *testing.T) {
 }
 
 func TestManager_List(t *testing.T) {
-	m := NewManager()
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	m := NewManager(db)
 
 	m.Generate("token 1", nil)
 	m.Generate("token 2", nil)
@@ -180,7 +240,10 @@ func TestManager_List(t *testing.T) {
 }
 
 func TestManager_Get(t *testing.T) {
-	m := NewManager()
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	m := NewManager(db)
 
 	token, _ := m.Generate("get test", nil)
 
@@ -202,7 +265,10 @@ func TestManager_Get(t *testing.T) {
 }
 
 func TestManager_GetByID(t *testing.T) {
-	m := NewManager()
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	m := NewManager(db)
 
 	token, _ := m.Generate("get by ID test", nil)
 
@@ -224,7 +290,10 @@ func TestManager_GetByID(t *testing.T) {
 }
 
 func TestManager_Clear(t *testing.T) {
-	m := NewManager()
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	m := NewManager(db)
 
 	m.Generate("token 1", nil)
 	m.Generate("token 2", nil)
@@ -237,7 +306,10 @@ func TestManager_Clear(t *testing.T) {
 }
 
 func TestManager_Count(t *testing.T) {
-	m := NewManager()
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	m := NewManager(db)
 
 	if m.Count() != 0 {
 		t.Error("期望初始 token 数量为 0")
