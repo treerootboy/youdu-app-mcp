@@ -7,12 +7,14 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/yourusername/youdu-app-mcp/internal/permission"
+	"github.com/yourusername/youdu-app-mcp/internal/token"
 )
 
-// Config 保存所有配置（YouDu + Permission）
+// Config 保存所有配置（YouDu + Permission + Token）
 type Config struct {
-	Youdu      YouduConfig            `mapstructure:"youdu"`
-	Permission *permission.Permission // 权限配置（由 config 包统一加载）
+	Youdu        YouduConfig            `mapstructure:"youdu"`
+	Permission   *permission.Permission // 权限配置（由 config 包统一加载）
+	TokenManager *token.Manager         // Token 管理器（动态管理）
 
 	viper *viper.Viper // 内部持有 viper 实例（不导出）
 }
@@ -62,6 +64,14 @@ func LoadFromFile(configPath string) (*Config, error) {
 		return nil, fmt.Errorf("加载权限配置失败: %w", err)
 	}
 	cfg.Permission = perm
+
+	// 加载 token 配置
+	tokenMgr, err := loadTokens(v)
+	if err != nil {
+		return nil, fmt.Errorf("加载 token 配置失败: %w", err)
+	}
+	cfg.TokenManager = tokenMgr
+
 	cfg.viper = v // 保存 viper 实例供后续使用
 
 	return &cfg, nil
@@ -168,6 +178,45 @@ func setDefaults(v *viper.Viper) {
 // GetPermission 获取权限配置
 func (c *Config) GetPermission() *permission.Permission {
 	return c.Permission
+}
+
+// GetTokenManager 获取 token 管理器
+func (c *Config) GetTokenManager() *token.Manager {
+	return c.TokenManager
+}
+
+// loadTokens 从 viper 加载 token 配置（内部函数）
+func loadTokens(v *viper.Viper) (*token.Manager, error) {
+	mgr := token.NewManager()
+
+	// 定义 token 配置结构
+	type TokenConfig struct {
+		Enabled bool           `mapstructure:"enabled"`
+		Tokens  []token.Token  `mapstructure:"tokens"`
+	}
+
+	var tokenCfg TokenConfig
+
+	// 从配置中读取 token
+	if err := v.UnmarshalKey("token", &tokenCfg); err != nil {
+		// 如果没有 token 配置，返回空的 token 管理器
+		return mgr, nil
+	}
+
+	// 如果未启用 token 验证，返回空的 token 管理器
+	if !tokenCfg.Enabled {
+		return mgr, nil
+	}
+
+	// 加载配置文件中的 token
+	for i := range tokenCfg.Tokens {
+		t := &tokenCfg.Tokens[i]
+		if err := mgr.Add(t); err != nil {
+			return nil, fmt.Errorf("添加 token 失败: %w", err)
+		}
+	}
+
+	return mgr, nil
 }
 
 // Validate 检查配置是否有效

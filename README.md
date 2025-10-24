@@ -22,6 +22,7 @@
 - **类型安全**：使用 Go 结构体和 JSON schema 注解实现完全类型安全
 - **配置管理**：通过配置文件和环境变量灵活配置
 - **权限控制**：内置细粒度的资源权限管理系统
+- **Token 认证**：HTTP API 支持基于 Token 的认证，保护 API 安全
 
 ## 安装
 
@@ -146,6 +147,74 @@ HTTP API 服务器将所有适配器方法自动暴露为 RESTful API endpoints�
 - `GET /health` - 健康检查
 - `GET /api/v1/endpoints` - 查看所有可用 API
 - `POST /api/v1/*` - 调用各种业务 API
+
+#### Token 认证
+
+HTTP API 支持 Token 认证功能，可以保护 API 不被未授权访问。
+
+##### 启用 Token 认证
+
+1. 在 `config.yaml` 中启用 token 认证：
+
+```yaml
+token:
+  enabled: true
+  tokens:
+    - id: "token001"
+      value: "your-token-value"
+      description: "API access token"
+      created_at: "2025-01-01T00:00:00Z"
+```
+
+2. 重启 API 服务器
+
+##### 生成 Token
+
+使用 CLI 命令生成新的 token：
+
+```bash
+# 生成永久 token
+./bin/youdu-cli token generate --description "Production API Token"
+
+# 生成有过期时间的 token
+./bin/youdu-cli token generate --description "Temporary Token" --expires-in 24h
+
+# JSON 格式输出
+./bin/youdu-cli token generate --description "Test Token" --json
+```
+
+##### 管理 Token
+
+```bash
+# 列出所有 token
+./bin/youdu-cli token list
+
+# 撤销 token
+./bin/youdu-cli token revoke --id token001
+```
+
+##### 使用 Token 调用 API
+
+在请求中添加 `Authorization` header：
+
+```bash
+# 使用 Bearer 格式
+curl -X POST http://localhost:8080/api/v1/send_text_message \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-token-value" \
+  -d '{"to_user": "user123", "content": "Hello"}'
+
+# 或直接使用 token
+curl -X POST http://localhost:8080/api/v1/send_text_message \
+  -H "Content-Type: application/json" \
+  -H "Authorization: your-token-value" \
+  -d '{"to_user": "user123", "content": "Hello"}'
+```
+
+**注意**：
+- 健康检查 (`/health`) 和 API 列表 (`/api/v1/endpoints`) 不需要 token
+- 所有业务 API 调用都需要有效的 token
+- Token 从配置文件加载，修改配置后需要重启服务器
 
 #### API 端点规范
 
