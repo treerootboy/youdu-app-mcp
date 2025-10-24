@@ -6,15 +6,17 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
+	"github.com/yourusername/youdu-app-mcp/internal/database"
 	"github.com/yourusername/youdu-app-mcp/internal/permission"
 	"github.com/yourusername/youdu-app-mcp/internal/token"
 )
 
-// Config 保存所有配置（YouDu + Permission + Token）
+// Config 保存所有配置（YouDu + Permission + Token + Database）
 type Config struct {
 	Youdu        YouduConfig            `mapstructure:"youdu"`
 	Permission   *permission.Permission // 权限配置（由 config 包统一加载）
 	TokenManager *token.Manager         // Token 管理器（动态管理）
+	Database     *database.DB           // 数据库连接
 
 	viper *viper.Viper // 内部持有 viper 实例（不导出）
 }
@@ -65,8 +67,15 @@ func LoadFromFile(configPath string) (*Config, error) {
 	}
 	cfg.Permission = perm
 
-	// 加载 token 配置
-	tokenMgr, err := loadTokens(v)
+	// 加载数据库配置并初始化连接
+	db, err := loadDatabase(v)
+	if err != nil {
+		return nil, fmt.Errorf("加载数据库配置失败: %w", err)
+	}
+	cfg.Database = db
+
+	// 加载 token 配置（需要数据库连接）
+	tokenMgr, err := loadTokens(v, db)
 	if err != nil {
 		return nil, fmt.Errorf("加载 token 配置失败: %w", err)
 	}
@@ -185,14 +194,16 @@ func (c *Config) GetTokenManager() *token.Manager {
 	return c.TokenManager
 }
 
-// loadTokens 从 viper 加载 token 配置（内部函数）
-func loadTokens(v *viper.Viper) (*token.Manager, error) {
-	mgr := token.NewManager()
+// GetDatabase 获取数据库连接
+func (c *Config) GetDatabase() *database.DB {
+	return c.Database
+}
 
+// loadTokens 从 viper 加载 token 配置（内部函数）
+func loadTokens(v *viper.Viper, db *database.DB) (*token.Manager, error) {
 	// 定义 token 配置结构
 	type TokenConfig struct {
-		Enabled bool           `mapstructure:"enabled"`
-		Tokens  []token.Token  `mapstructure:"tokens"`
+		Enabled bool `mapstructure:"enabled"`
 	}
 
 	var tokenCfg TokenConfig
@@ -200,23 +211,44 @@ func loadTokens(v *viper.Viper) (*token.Manager, error) {
 	// 从配置中读取 token
 	if err := v.UnmarshalKey("token", &tokenCfg); err != nil {
 		// 如果没有 token 配置，返回空的 token 管理器
-		return mgr, nil
+		return token.NewManager(nil), nil
 	}
 
 	// 如果未启用 token 验证，返回空的 token 管理器
 	if !tokenCfg.Enabled {
-		return mgr, nil
+		return token.NewManager(nil), nil
 	}
 
-	// 加载配置文件中的 token
-	for i := range tokenCfg.Tokens {
-		t := &tokenCfg.Tokens[i]
-		if err := mgr.Add(t); err != nil {
-			return nil, fmt.Errorf("添加 token 失败: %w", err)
+	// 创建带数据库的 token 管理器
+	var dbConn *database.DB
+	if db != nil {
+		dbConn = db
+	}
+
+	mgr := token.NewManager(dbConn.GetConnection())
+
+	return mgr, nil
+}
+
+// loadDatabase 从 viper 加载数据库配置（内部函数）
+func loadDatabase(v *viper.Viper) (*database.DB, error) {
+	var dbCfg database.Config
+
+	// 从配置中读取数据库配置
+	if err := v.UnmarshalKey("db", &dbCfg); err != nil {
+		// 如果没有数据库配置，使用默认值
+		dbCfg = database.Config{
+			Path: "./youdu.db",
 		}
 	}
 
-	return mgr, nil
+	// 创建数据库连接
+	db, err := database.New(dbCfg)
+	if err != nil {
+		return nil, fmt.Errorf("创建数据库连接失败: %w", err)
+	}
+
+	return db, nil
 }
 
 // Validate 检查配置是否有效
