@@ -31,7 +31,13 @@ var serveAPICmd = &cobra.Command{
   - POST /api/v1/* - 调用各种业务 API`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// 加载配置
-		cfg, err := config.Load()
+		var cfg *config.Config
+		var err error
+		if cfgFile != "" {
+			cfg, err = config.LoadFromFile(cfgFile)
+		} else {
+			cfg, err = config.Load()
+		}
 		if err != nil {
 			return fmt.Errorf("加载配置失败: %w", err)
 		}
