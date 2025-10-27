@@ -2,6 +2,7 @@ package adapter
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/yourusername/youdu-app-mcp/internal/adapter/testdata"
@@ -64,7 +65,7 @@ func TestAdapter_RowLevelPermissions(t *testing.T) {
 		if err == nil {
 			t.Error("不在 allowlist 中的用户应该被拒绝访问")
 		}
-		if err != nil && !contains(err.Error(), "不在允许列表中") {
+		if err != nil && !strings.Contains(err.Error(), "不在允许列表中") {
 			t.Errorf("错误消息应该包含 '不在允许列表中': %v", err)
 		}
 	})
@@ -145,18 +146,8 @@ func TestAdapter_RowLevelPermissions(t *testing.T) {
 		if err == nil {
 			t.Error("read 权限被禁用时，即使在 allowlist 中也应该被拒绝")
 		}
-		if err != nil && !contains(err.Error(), "不允许对资源") {
+		if err != nil && !strings.Contains(err.Error(), "不允许对资源") {
 			t.Errorf("错误消息应该说明操作被禁止: %v", err)
 		}
 	})
-}
-
-// contains 辅助函数
-func contains(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if i+len(substr) <= len(s) && s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

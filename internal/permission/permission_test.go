@@ -1,6 +1,7 @@
 package permission
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -129,7 +130,7 @@ func TestPermission_CheckWithID_AllowList(t *testing.T) {
 					return
 				}
 				if tt.errorContain != "" {
-					if !contains(err.Error(), tt.errorContain) {
+					if !strings.Contains(err.Error(), tt.errorContain) {
 						t.Errorf("错误消息不包含 '%s': %v", tt.errorContain, err)
 					}
 				}
@@ -158,19 +159,4 @@ func TestPermission_Check_BackwardCompatibility(t *testing.T) {
 	if err != nil {
 		t.Errorf("向后兼容性测试失败，Check 方法返回错误: %v", err)
 	}
-}
-
-// contains 检查字符串是否包含子串
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 || 
-		(len(s) > 0 && len(substr) > 0 && hasSubstring(s, substr)))
-}
-
-func hasSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
