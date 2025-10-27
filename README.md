@@ -100,7 +100,13 @@ permission:
 - 当配置了 `allowlist` 时，只有列表中的资源 ID 可以被访问
 - 如果未配置 `allowlist` 或列表为空，则不限制资源 ID（仍受操作权限控制）
 - 行级权限检查在操作权限检查通过后进行
-- 适用于所有需要资源 ID 的操作（如 GetUser、UpdateUser、DeleteUser 等）
+- **支持所有资源类型**：User、Dept、Group、Session（共 24 个操作方法）
+
+**支持的资源操作**：
+- **用户（User）**：GetUser、UpdateUser、DeleteUser
+- **部门（Dept）**：GetDeptList、GetDeptUserList、UpdateDept、DeleteDept
+- **群组（Group）**：GetGroupInfo、UpdateGroup、DeleteGroup、AddGroupMember、DelGroupMember
+- **会话（Session）**：GetSession、UpdateSession、SendTextSessionMessage、SendImageSessionMessage、SendFileSessionMessage
 
 或使用环境变量：
 
