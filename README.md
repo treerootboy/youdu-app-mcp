@@ -108,6 +108,28 @@ permission:
 - **群组（Group）**：GetGroupInfo、UpdateGroup、DeleteGroup、AddGroupMember、DelGroupMember
 - **会话（Session）**：GetSession、UpdateSession、SendTextSessionMessage、SendImageSessionMessage、SendFileSessionMessage
 
+### 消息发送权限（AllowSend）
+
+从 v1.2.0 开始，支持对消息发送进行细粒度的权限控制。通过配置 `allowsend`，可以限制只能向特定用户和部门发送消息：
+
+```yaml
+permission:
+  resources:
+    message:
+      create: true
+      # 消息发送权限控制
+      allowsend:
+        users: ["10232", "8891"]  # 只允许向这些用户发送消息
+        dept: ["1"]               # 只允许向这些部门发送消息
+```
+
+**消息发送权限说明**：
+- 可以单独配置 `users` 或 `dept`，也可以同时配置
+- 如果不配置 `allowsend`，则允许向任何用户/部门发送消息
+- 支持使用 `|` 分隔符同时向多个用户/部门发送
+- 适用于所有消息类型：文本、图片、文件、链接、系统消息
+- 详细文档请参考：[docs/MESSAGE_SEND_PERMISSION.md](docs/MESSAGE_SEND_PERMISSION.md)
+
 或使用环境变量：
 
 ```bash

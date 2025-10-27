@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/addcnos/youdu/v2"
-	"github.com/yourusername/youdu-app-mcp/internal/permission"
 )
 
 // SendTextMessageInput represents input for sending text message
@@ -22,8 +21,8 @@ type SendTextMessageOutput struct {
 
 // SendTextMessage sends a text message
 func (a *Adapter) SendTextMessage(ctx context.Context, input SendTextMessageInput) (*SendTextMessageOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceMessage, permission.ActionCreate); err != nil {
+	// 权限检查：检查消息发送权限
+	if err := a.checkMessageSendPermission(input.ToUser, input.ToDept); err != nil {
 		return nil, err
 	}
 
@@ -68,8 +67,8 @@ type SendImageMessageOutput struct {
 
 // SendImageMessage sends an image message
 func (a *Adapter) SendImageMessage(ctx context.Context, input SendImageMessageInput) (*SendImageMessageOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceMessage, permission.ActionCreate); err != nil {
+	// 权限检查：检查消息发送权限
+	if err := a.checkMessageSendPermission(input.ToUser, input.ToDept); err != nil {
 		return nil, err
 	}
 
@@ -106,8 +105,8 @@ type SendFileMessageOutput struct {
 
 // SendFileMessage sends a file message
 func (a *Adapter) SendFileMessage(ctx context.Context, input SendFileMessageInput) (*SendFileMessageOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceMessage, permission.ActionCreate); err != nil {
+	// 权限检查：检查消息发送权限
+	if err := a.checkMessageSendPermission(input.ToUser, input.ToDept); err != nil {
 		return nil, err
 	}
 
@@ -146,8 +145,8 @@ type SendLinkMessageOutput struct {
 
 // SendLinkMessage sends a link message
 func (a *Adapter) SendLinkMessage(ctx context.Context, input SendLinkMessageInput) (*SendLinkMessageOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceMessage, permission.ActionCreate); err != nil {
+	// 权限检查：检查消息发送权限
+	if err := a.checkMessageSendPermission(input.ToUser, input.ToDept); err != nil {
 		return nil, err
 	}
 
@@ -188,8 +187,8 @@ type SendSysMessageOutput struct {
 
 // SendSysMessage sends a system message
 func (a *Adapter) SendSysMessage(ctx context.Context, input SendSysMessageInput) (*SendSysMessageOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceMessage, permission.ActionCreate); err != nil {
+	// 权限检查：检查消息发送权限
+	if err := a.checkMessageSendPermission(input.ToUser, input.ToDept); err != nil {
 		return nil, err
 	}
 

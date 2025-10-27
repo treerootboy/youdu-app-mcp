@@ -63,6 +63,9 @@ permission:
       update: false  # 禁止更新消息（消息一般不可修改）
       delete: false  # 禁止删除消息
       # allowlist: []  # 可选：允许访问的消息ID列表（行级权限）
+      # allowsend:     # 可选：消息发送权限控制（限制可以向哪些用户/部门发送消息）
+      #   users: ["10232", "8891"]  # 允许发送消息的目标用户ID列表
+      #   dept: ["1"]               # 允许发送消息的目标部门ID列表
 
 # Token 认证配置
 token:
