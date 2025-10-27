@@ -71,7 +71,36 @@ permission:
       read: true
       update: false
       delete: false
+      # 可选：行级权限，只允许访问指定用户ID
+      # allowlist: ["10232", "10023"]
 ```
+
+### 行级权限（AllowList）
+
+从 v1.1.0 开始，支持对资源进行行级权限控制。通过配置 `allowlist`，可以限制只能访问特定 ID 的资源：
+
+```yaml
+permission:
+  enabled: true
+  allow_all: false
+  resources:
+    user:
+      read: true
+      update: true
+      # 只允许访问这些用户ID
+      allowlist: ["10232", "10023", "user001"]
+    
+    dept:
+      read: true
+      # 只允许访问这些部门ID
+      allowlist: ["1", "2", "100"]
+```
+
+**行级权限说明**：
+- 当配置了 `allowlist` 时，只有列表中的资源 ID 可以被访问
+- 如果未配置 `allowlist` 或列表为空，则不限制资源 ID（仍受操作权限控制）
+- 行级权限检查在操作权限检查通过后进行
+- 适用于所有需要资源 ID 的操作（如 GetUser、UpdateUser、DeleteUser 等）
 
 或使用环境变量：
 

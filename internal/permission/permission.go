@@ -36,10 +36,11 @@ type Permission struct {
 
 // ResourcePolicy 资源权限策略
 type ResourcePolicy struct {
-	Create bool `mapstructure:"create"` // 允许创建
-	Read   bool `mapstructure:"read"`   // 允许读取
-	Update bool `mapstructure:"update"` // 允许更新
-	Delete bool `mapstructure:"delete"` // 允许删除
+	Create    bool     `mapstructure:"create"`    // 允许创建
+	Read      bool     `mapstructure:"read"`      // 允许读取
+	Update    bool     `mapstructure:"update"`    // 允许更新
+	Delete    bool     `mapstructure:"delete"`    // 允许删除
+	AllowList []string `mapstructure:"allowlist"` // 允许访问的资源ID列表（行级权限）
 }
 
 // New 创建新的 Permission 实例（构造函数）
@@ -59,6 +60,11 @@ func New(enabled, allowAll bool, resources map[Resource]ResourcePolicy) *Permiss
 
 // Check 检查权限（业务逻辑）
 func (p *Permission) Check(resource Resource, action Action) error {
+	return p.CheckWithID(resource, action, "")
+}
+
+// CheckWithID 检查权限（包含行级权限）
+func (p *Permission) CheckWithID(resource Resource, action Action, resourceID string) error {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -90,6 +96,21 @@ func (p *Permission) Check(resource Resource, action Action) error {
 
 	if !allowed {
 		return fmt.Errorf("权限拒绝：不允许对资源 '%s' 执行 '%s' 操作", resource, action)
+	}
+
+	// 检查行级权限（如果配置了 allowlist 且提供了 resourceID）
+	if len(policy.AllowList) > 0 && resourceID != "" {
+		// 检查 resourceID 是否在 allowlist 中
+		found := false
+		for _, allowedID := range policy.AllowList {
+			if allowedID == resourceID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("权限拒绝：资源 ID '%s' 不在允许列表中", resourceID)
+		}
 	}
 
 	return nil
