@@ -25,10 +25,32 @@
 #### 新增辅助方法
 - `checkPermissionWithID(resource, action, resourceID)` - 行级权限检查
 
-#### 更新用户操作方法
+#### 更新所有资源操作方法
+
+**用户资源（User）**
 - `GetUser` - 现在检查用户 ID 是否在 allowlist 中
 - `UpdateUser` - 现在检查用户 ID 是否在 allowlist 中
 - `DeleteUser` - 现在检查用户 ID 是否在 allowlist 中
+
+**部门资源（Dept）**
+- `GetDeptList` - 现在检查部门 ID 是否在 allowlist 中
+- `GetDeptUserList` - 现在检查部门 ID 是否在 allowlist 中
+- `UpdateDept` - 现在检查部门 ID 是否在 allowlist 中
+- `DeleteDept` - 现在检查部门 ID 是否在 allowlist 中
+
+**群组资源（Group）**
+- `GetGroupInfo` - 现在检查群组 ID 是否在 allowlist 中
+- `UpdateGroup` - 现在检查群组 ID 是否在 allowlist 中
+- `DeleteGroup` - 现在检查群组 ID 是否在 allowlist 中
+- `AddGroupMember` - 现在检查群组 ID 是否在 allowlist 中
+- `DelGroupMember` - 现在检查群组 ID 是否在 allowlist 中
+
+**会话资源（Session）**
+- `GetSession` - 现在检查会话 ID 是否在 allowlist 中
+- `UpdateSession` - 现在检查会话 ID 是否在 allowlist 中
+- `SendTextSessionMessage` - 现在检查会话 ID 是否在 allowlist 中
+- `SendImageSessionMessage` - 现在检查会话 ID 是否在 allowlist 中
+- `SendFileSessionMessage` - 现在检查会话 ID 是否在 allowlist 中
 
 ### 3. CLI 命令增强
 

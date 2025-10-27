@@ -46,8 +46,8 @@ type GetGroupInfoOutput struct {
 
 // GetGroupInfo retrieves information about a specific group
 func (a *Adapter) GetGroupInfo(ctx context.Context, input GetGroupInfoInput) (*GetGroupInfoOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceGroup, permission.ActionRead); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceGroup, permission.ActionRead, input.GroupID); err != nil {
 		return nil, err
 	}
 
@@ -105,8 +105,8 @@ type UpdateGroupOutput struct {
 
 // UpdateGroup updates an existing group
 func (a *Adapter) UpdateGroup(ctx context.Context, input UpdateGroupInput) (*UpdateGroupOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceGroup, permission.ActionUpdate); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceGroup, permission.ActionUpdate, input.GroupID); err != nil {
 		return nil, err
 	}
 
@@ -137,8 +137,8 @@ type DeleteGroupOutput struct {
 
 // DeleteGroup deletes a group
 func (a *Adapter) DeleteGroup(ctx context.Context, input DeleteGroupInput) (*DeleteGroupOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceGroup, permission.ActionDelete); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceGroup, permission.ActionDelete, input.GroupID); err != nil {
 		return nil, err
 	}
 
@@ -165,8 +165,8 @@ type AddGroupMemberOutput struct {
 
 // AddGroupMember adds members to a group
 func (a *Adapter) AddGroupMember(ctx context.Context, input AddGroupMemberInput) (*AddGroupMemberOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceGroup, permission.ActionUpdate); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceGroup, permission.ActionUpdate, input.GroupID); err != nil {
 		return nil, err
 	}
 
@@ -198,8 +198,8 @@ type DelGroupMemberOutput struct {
 
 // DelGroupMember removes members from a group
 func (a *Adapter) DelGroupMember(ctx context.Context, input DelGroupMemberInput) (*DelGroupMemberOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceGroup, permission.ActionUpdate); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceGroup, permission.ActionUpdate, input.GroupID); err != nil {
 		return nil, err
 	}
 

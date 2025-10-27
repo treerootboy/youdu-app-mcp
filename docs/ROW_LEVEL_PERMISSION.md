@@ -140,22 +140,32 @@ resources:
 行级权限适用于以下资源和操作：
 
 ### 用户（User）
-- `GetUser` - 获取用户信息
-- `UpdateUser` - 更新用户信息
-- `DeleteUser` - 删除用户
+- `GetUser` - 获取用户信息 ✅
+- `UpdateUser` - 更新用户信息 ✅
+- `DeleteUser` - 删除用户 ✅
 
 ### 部门（Dept）
-- 当前部门操作大多数是列表操作，行级权限支持有限
-- 未来版本可能扩展支持
+- `GetDeptList` - 获取部门列表 ✅
+- `GetDeptUserList` - 获取部门用户列表 ✅
+- `UpdateDept` - 更新部门信息 ✅
+- `DeleteDept` - 删除部门 ✅
 
 ### 群组（Group）
-- 支持，但需要在适配器方法中实现
+- `GetGroupInfo` - 获取群组信息 ✅
+- `UpdateGroup` - 更新群组 ✅
+- `DeleteGroup` - 删除群组 ✅
+- `AddGroupMember` - 添加群组成员 ✅
+- `DelGroupMember` - 删除群组成员 ✅
 
 ### 会话（Session）
-- 支持，但需要在适配器方法中实现
+- `GetSession` - 获取会话信息 ✅
+- `UpdateSession` - 更新会话 ✅
+- `SendTextSessionMessage` - 发送文本会话消息 ✅
+- `SendImageSessionMessage` - 发送图片会话消息 ✅
+- `SendFileSessionMessage` - 发送文件会话消息 ✅
 
 ### 消息（Message）
-- 支持，但需要在适配器方法中实现
+- 消息操作主要用于发送，不涉及特定消息ID，因此不需要行级权限
 
 ## 实现细节
 
@@ -217,11 +227,18 @@ func (a *Adapter) GetUser(ctx context.Context, input GetUserInput) (*GetUserOutp
    - 测试 ID 不在 allowlist 中的情况
    - 测试向后兼容性
 
-2. **集成测试**（`internal/adapter/row_permission_test.go`）：
+2. **用户资源集成测试**（`internal/adapter/row_permission_test.go`）：
    - 测试未配置 allowlist 时的行为
    - 测试配置 allowlist 后的访问控制
    - 测试不同操作的 allowlist 限制
    - 测试操作权限与行级权限的交互
+
+3. **所有资源集成测试**（`internal/adapter/all_resources_row_permission_test.go`）：
+   - 测试部门资源的行级权限
+   - 测试群组资源的行级权限
+   - 测试会话资源的行级权限
+   - 测试多种资源类型同时配置 allowlist
+   - 测试未配置 allowlist 时的行为
 
 运行测试：
 
@@ -229,8 +246,14 @@ func (a *Adapter) GetUser(ctx context.Context, input GetUserInput) (*GetUserOutp
 # 运行所有权限相关测试
 go test ./internal/permission/... -v
 
-# 运行行级权限集成测试
+# 运行用户资源行级权限集成测试
 go test ./internal/adapter/... -v -run TestAdapter_RowLevelPermissions
+
+# 运行所有资源行级权限集成测试
+go test ./internal/adapter/... -v -run TestAdapter_AllResourcesRowLevelPermissions
+
+# 运行所有测试
+go test ./...
 ```
 
 ## 故障排查
