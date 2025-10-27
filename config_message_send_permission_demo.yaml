@@ -1,0 +1,61 @@
+# YouDu IM MCP Server - Message Send Permission Configuration
+# 此配置文件演示消息发送权限控制功能
+
+youdu:
+  addr: "http://localhost:7080"
+  buin: 123456789
+  app_id: "demo_app"
+  aes_key: "dGVzdF9hZXNfa2V5XzMyX2NoYXJhY3RlcnNfbG9uZyE="
+
+db:
+  path: "./youdu_demo.db"
+
+permission:
+  # 启用权限检查
+  enabled: true
+  
+  # 不允许所有操作（严格模式）
+  allow_all: false
+  
+  resources:
+    # 用户权限
+    user:
+      create: false
+      read: true
+      update: false
+      delete: false
+    
+    # 部门权限
+    dept:
+      create: false
+      read: true
+      update: false
+      delete: false
+    
+    # 群组权限
+    group:
+      create: true
+      read: true
+      update: true
+      delete: false
+    
+    # 会话权限
+    session:
+      create: true
+      read: true
+      update: true
+      delete: false
+    
+    # 消息权限 - 重点配置
+    message:
+      create: true   # 允许发送消息
+      read: true
+      update: false
+      delete: false
+      # 消息发送权限控制：限制可以向哪些用户/部门发送消息
+      allowsend:
+        users: ["10232", "8891"]  # 只允许向这些用户ID发送消息
+        dept: ["1"]               # 只允许向这些部门ID发送消息
+
+token:
+  enabled: false
