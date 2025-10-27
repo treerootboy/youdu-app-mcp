@@ -7,6 +7,52 @@
 
 ---
 
+## [v1.1.0] - 2025-10-27
+
+### 新增功能
+
+#### 行级权限控制 (Row-Level Permission)
+- ✨ **AllowList 配置**: 支持在资源权限配置中添加 `allowlist` 字段
+- ✨ **细粒度控制**: 可以精确控制哪些资源 ID 可以被访问
+- ✨ **灵活配置**: 支持为不同资源类型配置不同的允许列表
+- ✨ **向后兼容**: 未配置 `allowlist` 时，系统行为与之前版本完全一致
+- ✨ **全面支持**: 所有资源类型（User、Dept、Group、Session）均支持行级权限
+
+#### API 改进
+- ✨ 新增 `CheckWithID` 方法，支持行级权限检查
+- ✨ 新增 `checkPermissionWithID` 适配器方法
+- ✨ **用户资源**：GetUser、UpdateUser、DeleteUser 支持行级权限
+- ✨ **部门资源**：GetDeptList、GetDeptUserList、UpdateDept、DeleteDept 支持行级权限
+- ✨ **群组资源**：GetGroupInfo、UpdateGroup、DeleteGroup、AddGroupMember、DelGroupMember 支持行级权限
+- ✨ **会话资源**：GetSession、UpdateSession、SendTextSessionMessage、SendImageSessionMessage、SendFileSessionMessage 支持行级权限
+
+#### 文档
+- 📝 新增行级权限功能文档 (`docs/ROW_LEVEL_PERMISSION.md`)
+- 📝 更新 `config.yaml.example` 包含 allowlist 配置示例
+- 📝 更新 README 说明行级权限功能
+
+#### 测试
+- ✅ 新增行级权限单元测试 (`internal/permission/permission_test.go`)
+- ✅ 新增用户资源行级权限集成测试 (`internal/adapter/row_permission_test.go`)
+- ✅ 新增所有资源行级权限集成测试 (`internal/adapter/all_resources_row_permission_test.go`)
+- ✅ 新增测试配置文件 (`config_row_permission_test.yaml`)
+
+### 配置示例
+
+```yaml
+permission:
+  enabled: true
+  allow_all: false
+  resources:
+    user:
+      read: true
+      update: true
+      # 只允许访问这些用户ID
+      allowlist: ["10232", "10023", "user001"]
+```
+
+---
+
 ## [v1.0.0] - 2025-10-17
 
 ### 首次发布 🎉

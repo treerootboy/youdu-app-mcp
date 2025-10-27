@@ -2,6 +2,7 @@ package adapter
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/addcnos/youdu/v2"
 	"github.com/yourusername/youdu-app-mcp/internal/permission"
@@ -19,8 +20,8 @@ type DeptListOutput struct {
 
 // GetDeptList 获取部门列表
 func (a *Adapter) GetDeptList(ctx context.Context, input DeptListInput) (*DeptListOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceDept, permission.ActionRead); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceDept, permission.ActionRead, fmt.Sprintf("%d", input.DeptID)); err != nil {
 		return nil, err
 	}
 
@@ -46,8 +47,8 @@ type DeptUserListOutput struct {
 
 // GetDeptUserList 获取部门中的用户列表
 func (a *Adapter) GetDeptUserList(ctx context.Context, input DeptUserListInput) (*DeptUserListOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceDept, permission.ActionRead); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceDept, permission.ActionRead, fmt.Sprintf("%d", input.DeptID)); err != nil {
 		return nil, err
 	}
 
@@ -141,8 +142,8 @@ type UpdateDeptOutput struct {
 
 // UpdateDept 更新现有部门
 func (a *Adapter) UpdateDept(ctx context.Context, input UpdateDeptInput) (*UpdateDeptOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceDept, permission.ActionUpdate); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceDept, permission.ActionUpdate, fmt.Sprintf("%d", input.DeptID)); err != nil {
 		return nil, err
 	}
 
@@ -176,8 +177,8 @@ type DeleteDeptOutput struct {
 
 // DeleteDept 删除部门
 func (a *Adapter) DeleteDept(ctx context.Context, input DeleteDeptInput) (*DeleteDeptOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceDept, permission.ActionDelete); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceDept, permission.ActionDelete, fmt.Sprintf("%d", input.DeptID)); err != nil {
 		return nil, err
 	}
 

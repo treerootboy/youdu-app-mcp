@@ -56,8 +56,8 @@ type GetSessionOutput struct {
 
 // GetSession retrieves session information
 func (a *Adapter) GetSession(ctx context.Context, input GetSessionInput) (*GetSessionOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceSession, permission.ActionRead); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceSession, permission.ActionRead, input.SessionID); err != nil {
 		return nil, err
 	}
 
@@ -85,8 +85,8 @@ type UpdateSessionOutput struct {
 
 // UpdateSession updates an existing session
 func (a *Adapter) UpdateSession(ctx context.Context, input UpdateSessionInput) (*UpdateSessionOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceSession, permission.ActionUpdate); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceSession, permission.ActionUpdate, input.SessionID); err != nil {
 		return nil, err
 	}
 
@@ -120,8 +120,8 @@ type SendTextSessionMessageOutput struct {
 
 // SendTextSessionMessage sends a text message to a session
 func (a *Adapter) SendTextSessionMessage(ctx context.Context, input SendTextSessionMessageInput) (*SendTextSessionMessageOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceSession, permission.ActionUpdate); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceSession, permission.ActionUpdate, input.SessionID); err != nil {
 		return nil, err
 	}
 
@@ -158,8 +158,8 @@ type SendImageSessionMessageOutput struct {
 
 // SendImageSessionMessage sends an image message to a session
 func (a *Adapter) SendImageSessionMessage(ctx context.Context, input SendImageSessionMessageInput) (*SendImageSessionMessageOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceSession, permission.ActionUpdate); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceSession, permission.ActionUpdate, input.SessionID); err != nil {
 		return nil, err
 	}
 
@@ -196,8 +196,8 @@ type SendFileSessionMessageOutput struct {
 
 // SendFileSessionMessage sends a file message to a session
 func (a *Adapter) SendFileSessionMessage(ctx context.Context, input SendFileSessionMessageInput) (*SendFileSessionMessageOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceSession, permission.ActionUpdate); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceSession, permission.ActionUpdate, input.SessionID); err != nil {
 		return nil, err
 	}
 
