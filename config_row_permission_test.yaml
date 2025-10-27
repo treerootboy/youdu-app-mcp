@@ -1,0 +1,62 @@
+# YouDu IM MCP Server - Row-Level Permission Test Configuration
+# 此配置文件演示行级权限（allowlist）功能
+
+youdu:
+  addr: "http://localhost:7080"
+  buin: 123456789
+  app_id: "test_app_id"
+  aes_key: "dGVzdF9hZXNfa2V5XzMyX2NoYXJhY3RlcnNfbG9uZyE="
+
+db:
+  path: "./youdu_test.db"
+
+permission:
+  # 启用权限检查
+  enabled: true
+  
+  # 不允许所有操作（严格模式）
+  allow_all: false
+  
+  resources:
+    # 用户权限示例：只允许访问指定用户ID
+    user:
+      create: false
+      read: true
+      update: true
+      delete: false
+      # 行级权限：只允许访问这些用户ID
+      allowlist: ["10232", "10023", "user001"]
+    
+    # 部门权限示例：限制部门访问
+    dept:
+      create: false
+      read: true
+      update: false
+      delete: false
+      # 行级权限：只允许访问特定部门
+      allowlist: ["1", "2", "100"]
+    
+    # 群组权限示例：无 allowlist 限制
+    group:
+      create: true
+      read: true
+      update: true
+      delete: false
+      # 未配置 allowlist，所有群组都可以访问
+    
+    # 会话权限
+    session:
+      create: true
+      read: true
+      update: true
+      delete: false
+    
+    # 消息权限
+    message:
+      create: true
+      read: true
+      update: false
+      delete: false
+
+token:
+  enabled: false

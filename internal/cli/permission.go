@@ -77,6 +77,11 @@ var permListCmd = &cobra.Command{
 				fmt.Printf("  读取 (read):   %s\n", formatPermission(policy.Read))
 				fmt.Printf("  更新 (update): %s\n", formatPermission(policy.Update))
 				fmt.Printf("  删除 (delete): %s\n", formatPermission(policy.Delete))
+				
+				// 显示 allowlist 配置
+				if len(policy.AllowList) > 0 {
+					fmt.Printf("  允许列表 (allowlist): %v\n", policy.AllowList)
+				}
 			}
 			fmt.Println()
 		}

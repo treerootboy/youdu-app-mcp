@@ -56,3 +56,8 @@ func (a *Adapter) GetPermission() *permission.Permission {
 func (a *Adapter) checkPermission(resource permission.Resource, action permission.Action) error {
 	return a.permission.Check(resource, action)
 }
+
+// checkPermissionWithID 检查操作权限（包含行级权限）
+func (a *Adapter) checkPermissionWithID(resource permission.Resource, action permission.Action, resourceID string) error {
+	return a.permission.CheckWithID(resource, action, resourceID)
+}

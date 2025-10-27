@@ -19,8 +19,8 @@ type GetUserOutput struct {
 
 // GetUser retrieves user information
 func (a *Adapter) GetUser(ctx context.Context, input GetUserInput) (*GetUserOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceUser, permission.ActionRead); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceUser, permission.ActionRead, input.UserID); err != nil {
 		return nil, err
 	}
 
@@ -95,8 +95,8 @@ type UpdateUserOutput struct {
 
 // UpdateUser updates an existing user
 func (a *Adapter) UpdateUser(ctx context.Context, input UpdateUserInput) (*UpdateUserOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceUser, permission.ActionUpdate); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceUser, permission.ActionUpdate, input.UserID); err != nil {
 		return nil, err
 	}
 
@@ -131,8 +131,8 @@ type DeleteUserOutput struct {
 
 // DeleteUser deletes a user
 func (a *Adapter) DeleteUser(ctx context.Context, input DeleteUserInput) (*DeleteUserOutput, error) {
-	// 权限检查
-	if err := a.checkPermission(permission.ResourceUser, permission.ActionDelete); err != nil {
+	// 权限检查（包含行级权限）
+	if err := a.checkPermissionWithID(permission.ResourceUser, permission.ActionDelete, input.UserID); err != nil {
 		return nil, err
 	}
 
