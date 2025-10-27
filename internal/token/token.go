@@ -10,10 +10,10 @@ import (
 
 // Token 代表一个访问令牌
 type Token struct {
-	ID          string    `json:"id" yaml:"id"`                     // Token ID
-	Value       string    `json:"value" yaml:"value"`               // Token 值
-	Description string    `json:"description" yaml:"description"`   // 描述
-	CreatedAt   time.Time `json:"created_at" yaml:"created_at"`     // 创建时间
+	ID          string     `json:"id" yaml:"id"`                                     // Token ID
+	Value       string     `json:"value" yaml:"value"`                               // Token 值
+	Description string     `json:"description" yaml:"description"`                   // 描述
+	CreatedAt   time.Time  `json:"created_at" yaml:"created_at"`                     // 创建时间
 	ExpiresAt   *time.Time `json:"expires_at,omitempty" yaml:"expires_at,omitempty"` // 过期时间 (可选)
 }
 
@@ -98,24 +98,52 @@ func (m *Manager) Add(token *Token) error {
 // Validate 验证 token 是否有效
 func (m *Manager) Validate(tokenValue string) bool {
 	if m.db == nil {
+		fmt.Printf("[DEBUG] Validate: 数据库连接为空\n")
 		return false
 	}
 
-	var expiresAt sql.NullTime
+	var expiresAtStr sql.NullString
 	err := m.db.QueryRow(`
 		SELECT expires_at FROM tokens WHERE value = ?
-	`, tokenValue).Scan(&expiresAt)
+	`, tokenValue).Scan(&expiresAtStr)
 
 	if err != nil {
+		fmt.Printf("[DEBUG] Validate: 查询数据库失败: %v\n", err)
 		return false
 	}
 
-	// 检查是否过期
-	if expiresAt.Valid && time.Now().After(expiresAt.Time) {
-		return false
+	fmt.Printf("[DEBUG] Validate: 找到token，过期时间: %s (valid: %v)\n", expiresAtStr.String, expiresAtStr.Valid)
+
+	// 如果没有设置过期时间，token 永久有效
+	if !expiresAtStr.Valid {
+		fmt.Printf("[DEBUG] Validate: token永不过期，返回true\n")
+		return true
 	}
 
-	return true
+	// 解析过期时间并比较（使用 UTC 时间）
+	// 尝试多种时间格式
+	var expiresAt time.Time
+
+	// 首先尝试 RFC3339 格式（ISO 8601）
+	expiresAt, err = time.Parse(time.RFC3339, expiresAtStr.String)
+	if err != nil {
+		// 如果失败，尝试简单的日期时间格式
+		expiresAt, err = time.Parse("2006-01-02 15:04:05", expiresAtStr.String)
+		if err != nil {
+			fmt.Printf("[DEBUG] Validate: 解析过期时间失败: %v\n", err)
+			return false
+		}
+	}
+
+	currentTime := time.Now().UTC()
+	fmt.Printf("[DEBUG] Validate: 当前UTC时间: %s, 过期UTC时间: %s\n",
+		currentTime.Format("2006-01-02 15:04:05"),
+		expiresAt.UTC().Format("2006-01-02 15:04:05"))
+
+	// 使用 UTC 时间进行比较
+	result := currentTime.Before(expiresAt.UTC())
+	fmt.Printf("[DEBUG] Validate: 比较结果: %v\n", result)
+	return result
 }
 
 // Revoke 撤销 token
@@ -183,21 +211,32 @@ func (m *Manager) List() []*Token {
 	var tokens []*Token
 	for rows.Next() {
 		var token Token
-		var expiresAt sql.NullTime
+		var createdAtStr, expiresAtStr sql.NullString
 
 		err := rows.Scan(
 			&token.ID,
 			&token.Value,
 			&token.Description,
-			&token.CreatedAt,
-			&expiresAt,
+			&createdAtStr,
+			&expiresAtStr,
 		)
 		if err != nil {
 			continue
 		}
 
-		if expiresAt.Valid {
-			token.ExpiresAt = &expiresAt.Time
+		// 解析创建时间
+		if createdAtStr.Valid {
+			if parsedTime, err := time.Parse("2006-01-02 15:04:05", createdAtStr.String); err == nil {
+				token.CreatedAt = parsedTime.UTC()
+			}
+		}
+
+		// 解析过期时间
+		if expiresAtStr.Valid {
+			if parsedTime, err := time.Parse("2006-01-02 15:04:05", expiresAtStr.String); err == nil {
+				utcTime := parsedTime.UTC()
+				token.ExpiresAt = &utcTime
+			}
 		}
 
 		tokens = append(tokens, &token)
@@ -213,7 +252,7 @@ func (m *Manager) Get(tokenValue string) (*Token, bool) {
 	}
 
 	var token Token
-	var expiresAt sql.NullTime
+	var createdAtStr, expiresAtStr sql.NullString
 
 	err := m.db.QueryRow(`
 		SELECT id, value, description, created_at, expires_at
@@ -223,16 +262,27 @@ func (m *Manager) Get(tokenValue string) (*Token, bool) {
 		&token.ID,
 		&token.Value,
 		&token.Description,
-		&token.CreatedAt,
-		&expiresAt,
+		&createdAtStr,
+		&expiresAtStr,
 	)
 
 	if err != nil {
 		return nil, false
 	}
 
-	if expiresAt.Valid {
-		token.ExpiresAt = &expiresAt.Time
+	// 解析创建时间
+	if createdAtStr.Valid {
+		if parsedTime, err := time.Parse("2006-01-02 15:04:05", createdAtStr.String); err == nil {
+			token.CreatedAt = parsedTime.UTC()
+		}
+	}
+
+	// 解析过期时间
+	if expiresAtStr.Valid {
+		if parsedTime, err := time.Parse("2006-01-02 15:04:05", expiresAtStr.String); err == nil {
+			utcTime := parsedTime.UTC()
+			token.ExpiresAt = &utcTime
+		}
 	}
 
 	return &token, true
@@ -245,7 +295,7 @@ func (m *Manager) GetByID(tokenID string) (*Token, bool) {
 	}
 
 	var token Token
-	var expiresAt sql.NullTime
+	var createdAtStr, expiresAtStr sql.NullString
 
 	err := m.db.QueryRow(`
 		SELECT id, value, description, created_at, expires_at
@@ -255,16 +305,27 @@ func (m *Manager) GetByID(tokenID string) (*Token, bool) {
 		&token.ID,
 		&token.Value,
 		&token.Description,
-		&token.CreatedAt,
-		&expiresAt,
+		&createdAtStr,
+		&expiresAtStr,
 	)
 
 	if err != nil {
 		return nil, false
 	}
 
-	if expiresAt.Valid {
-		token.ExpiresAt = &expiresAt.Time
+	// 解析创建时间
+	if createdAtStr.Valid {
+		if parsedTime, err := time.Parse("2006-01-02 15:04:05", createdAtStr.String); err == nil {
+			token.CreatedAt = parsedTime.UTC()
+		}
+	}
+
+	// 解析过期时间
+	if expiresAtStr.Valid {
+		if parsedTime, err := time.Parse("2006-01-02 15:04:05", expiresAtStr.String); err == nil {
+			utcTime := parsedTime.UTC()
+			token.ExpiresAt = &utcTime
+		}
 	}
 
 	return &token, true
@@ -296,13 +357,17 @@ func (m *Manager) Count() int {
 func (m *Manager) saveToken(token *Token) error {
 	var expiresAt interface{}
 	if token.ExpiresAt != nil {
-		expiresAt = token.ExpiresAt
+		// 格式化为 UTC 时间字符串，便于 SQLite 处理
+		expiresAt = token.ExpiresAt.UTC().Format("2006-01-02 15:04:05")
 	}
+
+	// 同样格式化 created_at 时间
+	createdAt := token.CreatedAt.UTC().Format("2006-01-02 15:04:05")
 
 	_, err := m.db.Exec(`
 		INSERT OR REPLACE INTO tokens (id, value, description, created_at, expires_at)
 		VALUES (?, ?, ?, ?, ?)
-	`, token.ID, token.Value, token.Description, token.CreatedAt, expiresAt)
+	`, token.ID, token.Value, token.Description, createdAt, expiresAt)
 
 	return err
 }
