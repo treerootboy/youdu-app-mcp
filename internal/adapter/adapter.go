@@ -61,3 +61,8 @@ func (a *Adapter) checkPermission(resource permission.Resource, action permissio
 func (a *Adapter) checkPermissionWithID(resource permission.Resource, action permission.Action, resourceID string) error {
 	return a.permission.CheckWithID(resource, action, resourceID)
 }
+
+// checkMessageSendPermission 检查消息发送权限
+func (a *Adapter) checkMessageSendPermission(toUser, toDept string) error {
+	return a.permission.CheckMessageSend(toUser, toDept)
+}

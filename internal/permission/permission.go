@@ -34,13 +34,20 @@ type Permission struct {
 	mu        sync.RWMutex                // 保护并发访问
 }
 
+// AllowSend 消息发送权限配置
+type AllowSend struct {
+	Users []string `mapstructure:"users"` // 允许发送消息的用户ID列表
+	Dept  []string `mapstructure:"dept"`  // 允许发送消息的部门ID列表
+}
+
 // ResourcePolicy 资源权限策略
 type ResourcePolicy struct {
-	Create    bool     `mapstructure:"create"`    // 允许创建
-	Read      bool     `mapstructure:"read"`      // 允许读取
-	Update    bool     `mapstructure:"update"`    // 允许更新
-	Delete    bool     `mapstructure:"delete"`    // 允许删除
-	AllowList []string `mapstructure:"allowlist"` // 允许访问的资源ID列表（行级权限）
+	Create    bool      `mapstructure:"create"`    // 允许创建
+	Read      bool      `mapstructure:"read"`      // 允许读取
+	Update    bool      `mapstructure:"update"`    // 允许更新
+	Delete    bool      `mapstructure:"delete"`    // 允许删除
+	AllowList []string  `mapstructure:"allowlist"` // 允许访问的资源ID列表（行级权限）
+	AllowSend AllowSend `mapstructure:"allowsend"` // 消息发送权限（仅用于 message 资源）
 }
 
 // New 创建新的 Permission 实例（构造函数）
@@ -114,6 +121,126 @@ func (p *Permission) CheckWithID(resource Resource, action Action, resourceID st
 	}
 
 	return nil
+}
+
+// CheckMessageSend 检查消息发送权限
+// toUser: 目标用户ID（用 | 分隔多个用户）
+// toDept: 目标部门ID（用 | 分隔多个部门）
+func (p *Permission) CheckMessageSend(toUser, toDept string) error {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	// 如果未启用权限检查或允许所有操作
+	if !p.Enabled || p.AllowAll {
+		return nil
+	}
+
+	// 检查资源权限
+	policy, exists := p.Resources[ResourceMessage]
+	if !exists {
+		return fmt.Errorf("权限拒绝：未配置资源 'message' 的权限策略")
+	}
+
+	// 检查创建权限（发送消息需要 create 权限）
+	if !policy.Create {
+		return fmt.Errorf("权限拒绝：不允许发送消息")
+	}
+
+	// 检查是否配置了 allowsend 限制
+	hasUserLimit := len(policy.AllowSend.Users) > 0
+	hasDeptLimit := len(policy.AllowSend.Dept) > 0
+
+	// 如果没有配置任何限制，则允许发送
+	if !hasUserLimit && !hasDeptLimit {
+		return nil
+	}
+
+	// 检查用户权限
+	if toUser != "" && hasUserLimit {
+		// 分割用户ID（有度支持 | 分隔多个用户）
+		users := splitIDs(toUser)
+		for _, userID := range users {
+			if !contains(policy.AllowSend.Users, userID) {
+				return fmt.Errorf("权限拒绝：不允许向用户 '%s' 发送消息", userID)
+			}
+		}
+	}
+
+	// 检查部门权限
+	if toDept != "" && hasDeptLimit {
+		// 分割部门ID（有度支持 | 分隔多个部门）
+		depts := splitIDs(toDept)
+		for _, deptID := range depts {
+			if !contains(policy.AllowSend.Dept, deptID) {
+				return fmt.Errorf("权限拒绝：不允许向部门 '%s' 发送消息", deptID)
+			}
+		}
+	}
+
+	// 如果配置了限制，但没有指定任何接收者
+	if toUser == "" && toDept == "" {
+		if hasUserLimit || hasDeptLimit {
+			return fmt.Errorf("权限拒绝：必须指定接收者")
+		}
+	}
+
+	return nil
+}
+
+// splitIDs 分割ID字符串（支持 | 分隔符）
+func splitIDs(ids string) []string {
+	if ids == "" {
+		return nil
+	}
+	parts := make([]string, 0)
+	for _, id := range splitByPipe(ids) {
+		if trimmed := trimSpace(id); trimmed != "" {
+			parts = append(parts, trimmed)
+		}
+	}
+	return parts
+}
+
+// splitByPipe 通过 | 分割字符串
+func splitByPipe(s string) []string {
+	result := make([]string, 0)
+	current := ""
+	for _, ch := range s {
+		if ch == '|' {
+			result = append(result, current)
+			current = ""
+		} else {
+			current += string(ch)
+		}
+	}
+	if current != "" {
+		result = append(result, current)
+	}
+	return result
+}
+
+// trimSpace 移除字符串前后的空格
+func trimSpace(s string) string {
+	// 简单实现：移除前后空格
+	start := 0
+	end := len(s)
+	for start < end && (s[start] == ' ' || s[start] == '\t' || s[start] == '\n' || s[start] == '\r') {
+		start++
+	}
+	for end > start && (s[end-1] == ' ' || s[end-1] == '\t' || s[end-1] == '\n' || s[end-1] == '\r') {
+		end--
+	}
+	return s[start:end]
+}
+
+// contains 检查字符串切片是否包含某个值
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
 
 // SetResourcePolicy 设置资源权限策略
