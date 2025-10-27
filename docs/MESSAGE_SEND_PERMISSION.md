@@ -326,7 +326,7 @@ A: 当前版本不支持通配符或正则表达式。如需此功能，请提�
 
 ## 相关文档
 
-- [权限系统总体介绍](README.md#权限控制)
-- [行级权限文档](docs/row-level-permissions.md)
-- [配置文件示例](config.yaml.example)
-- [演示脚本](demo_message_send_permission.sh)
+- [权限系统总体介绍](../README.md#权限控制)
+- [行级权限文档](ROW_LEVEL_PERMISSION.md)
+- [配置文件示例](../config.yaml.example)
+- [演示脚本](../demo_message_send_permission.sh)
