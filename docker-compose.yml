@@ -14,6 +14,7 @@ services:
       - YOUDU_BUIN=${YOUDU_BUIN}
       - YOUDU_APP_ID=${YOUDU_APP_ID}
       - YOUDU_AES_KEY=${YOUDU_AES_KEY}
+      - YOUDU_CONFIG_FILE=/app/config/config.yaml
       # 数据库配置
       - DB_PATH=/app/data/youdu.db
       # Token 认证配置
@@ -54,6 +55,7 @@ services:
       - YOUDU_BUIN=${YOUDU_BUIN}
       - YOUDU_APP_ID=${YOUDU_APP_ID}
       - YOUDU_AES_KEY=${YOUDU_AES_KEY}
+      - YOUDU_CONFIG_FILE=/app/config/config.yaml
       # 数据库配置
       - DB_PATH=/app/data/youdu.db
       # 权限配置
