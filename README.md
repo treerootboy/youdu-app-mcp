@@ -26,12 +26,33 @@
 
 ## 安装
 
-### 前置要求
+### 方式一：Docker 部署（推荐）🐳
+
+使用 Docker Compose 一键启动服务（支持数据持久化）：
+
+```bash
+# 克隆仓库
+git clone https://github.com/yourusername/youdu-app-mcp.git
+cd youdu-app-mcp
+
+# 一键启动
+./start.sh
+```
+
+启动后可访问：
+- HTTP API: http://localhost:8080
+- MCP Server: localhost:3000
+
+详细文档请查看 [DOCKER.md](DOCKER.md)
+
+### 方式二：源码构建
+
+#### 前置要求
 
 - Go 1.23 或更高版本
 - 可访问的有度 IM 服务器
 
-### 构建
+#### 构建
 
 ```bash
 # 构建 MCP 服务器
