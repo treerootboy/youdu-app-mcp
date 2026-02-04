@@ -11,6 +11,37 @@
 
 ### 新增功能
 
+#### 文件上传功能
+- ✨ **UploadFile 方法**: 上传文件到有度服务器并返回 media_id
+  - 支持指定文件路径、文件名、文件类型
+  - 自动从路径提取文件名（如果未提供）
+  - 支持 4 种文件类型：image, file, voice, video
+  - 返回 media_id 和成功状态
+  - 集成权限检查 (message.create)
+- ✨ **SendFileWithUpload 方法**: 一键上传并发送文件消息
+  - 用户只需提供文件路径，无需手动管理 media_id
+  - 支持向用户或部门发送
+  - 内部自动调用上传和发送流程
+  - 返回 media_id 供后续使用
+  - 集成消息发送权限检查
+- ✨ **自动接口生成**: CLI、MCP、HTTP API 三种接口自动可用
+  - CLI: `upload-file`, `send-file-with-upload`
+  - HTTP: `POST /api/v1/upload_file`, `POST /api/v1/send_file_with_upload`
+  - MCP: `upload_file`, `send_file_with_upload` 工具
+
+#### 文档和测试
+- 📝 新增文件上传测试文档 (`test/FILE_UPLOAD_TEST.md`)
+  - 详细功能说明和参数描述
+  - CLI、HTTP API、MCP 测试步骤
+  - 使用场景示例
+  - 错误处理说明
+  - 权限配置指南
+- 📝 新增文件上传实现总结 (`IMPLEMENTATION_FILE_UPLOAD.md`)
+  - 实现细节和代码分析
+  - 架构优势说明
+  - 技术亮点总结
+- 🧪 新增 HTTP API 测试脚本 (`test/scripts/test_upload_api.sh`)
+
 #### 自动构建和发布
 - ✨ **GitHub Actions 工作流**: 添加自动构建和发布工作流 (`.github/workflows/release.yml`)
 - ✨ **多平台支持**: 自动构建 6 个平台的二进制文件
