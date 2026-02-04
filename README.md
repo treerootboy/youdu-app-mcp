@@ -26,12 +26,24 @@
 
 ## 安装
 
-### 前置要求
+### 方式一：下载预编译二进制文件（推荐）
+
+从 [Releases 页面](https://github.com/treerootboy/youdu-app-mcp/releases)下载适合您平台的预编译二进制文件，无需安装 Go 环境。
+
+下载后添加执行权限（Linux/macOS）：
+```bash
+chmod +x youdu-cli-*
+chmod +x youdu-mcp-*
+```
+
+### 方式二：从源码构建
+
+#### 前置要求
 
 - Go 1.23 或更高版本
 - 可访问的有度 IM 服务器
 
-### 构建
+#### 构建
 
 ```bash
 # 构建 MCP 服务器
@@ -468,6 +480,57 @@ youdu-app-mcp/
 3. **类型安全**：使用 JSON schema 注解的输入/输出结构体
 4. **简洁性**：适配器方法具有简单、直观的名称和参数
 5. **统一接口**：三种接口模式（CLI、MCP、HTTP）共享同一套业务逻辑
+
+## 发布
+
+项目使用 GitHub Actions 自动构建和发布多平台二进制文件。
+
+### 创建新版本
+
+1. **更新版本信息**
+   - 更新 CHANGELOG.md，记录新版本的变更内容
+   - 确保所有代码已提交并推送到 main 分支
+
+2. **创建版本标签**
+   ```bash
+   # 创建带注释的标签
+   git tag -a v1.0.0 -m "Release v1.0.0"
+   
+   # 推送标签到远程仓库
+   git push origin v1.0.0
+   ```
+
+3. **自动构建**
+   - 推送标签后，GitHub Actions 会自动触发构建流程
+   - 构建过程会为以下平台生成二进制文件：
+     - Linux (amd64, arm64)
+     - Windows (amd64, arm64)
+     - macOS (amd64, arm64)
+   - 每个平台会生成两个可执行文件：
+     - `youdu-cli-{platform}-{arch}` - CLI 工具（包含 HTTP API 功能）
+     - `youdu-mcp-{platform}-{arch}` - MCP 服务器
+
+4. **发布到 GitHub Releases**
+   - 构建完成后，所有二进制文件会自动上传到 GitHub Releases
+   - Release 会自动生成更新说明
+   - 用户可以直接从 Releases 页面下载对应平台的可执行文件
+
+### 下载已发布版本
+
+访问 [Releases 页面](https://github.com/treerootboy/youdu-app-mcp/releases)下载最新版本的二进制文件。
+
+选择适合您平台的文件：
+- **Linux 用户**: 下载 `youdu-cli-linux-amd64` 或 `youdu-mcp-linux-amd64`
+- **Windows 用户**: 下载 `youdu-cli-windows-amd64.exe` 或 `youdu-mcp-windows-amd64.exe`
+- **macOS 用户**: 
+  - Intel 芯片: 下载 `youdu-cli-darwin-amd64` 或 `youdu-mcp-darwin-amd64`
+  - Apple Silicon (M1/M2): 下载 `youdu-cli-darwin-arm64` 或 `youdu-mcp-darwin-arm64`
+
+下载后需要添加执行权限（Linux/macOS）：
+```bash
+chmod +x youdu-cli-linux-amd64
+chmod +x youdu-mcp-linux-amd64
+```
 
 ## 依赖项
 
