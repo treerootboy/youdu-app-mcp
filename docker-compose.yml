@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # HTTP API 服务 - 供 LLM 通过 HTTP 协议调用
   youdu-api:
