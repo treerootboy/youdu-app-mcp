@@ -26,7 +26,26 @@
 
 ## 安装
 
-### 方式一：下载预编译二进制文件（推荐）
+### 方式一：Docker 部署（推荐）🐳
+
+使用 Docker Compose 一键启动服务（支持数据持久化）：
+
+```bash
+# 克隆仓库
+git clone https://github.com/yourusername/youdu-app-mcp.git
+cd youdu-app-mcp
+
+# 一键启动
+./start.sh
+```
+
+启动后可访问：
+- HTTP API: http://localhost:8080
+- MCP Server: localhost:3000
+
+详细文档请查看 [DOCKER.md](DOCKER.md)
+
+### 方式二：下载预编译二进制文件（推荐）
 
 从 [Releases 页面](https://github.com/treerootboy/youdu-app-mcp/releases)下载适合您平台的预编译二进制文件，无需安装 Go 环境。
 
@@ -36,7 +55,7 @@ chmod +x youdu-cli-*
 chmod +x youdu-mcp-*
 ```
 
-### 方式二：从源码构建
+### 方式三：从源码构建
 
 #### 前置要求
 
