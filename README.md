@@ -192,6 +192,10 @@ CLI 提供按功能组织的命令：
 # 消息操作
 ./bin/youdu-cli message send-text-message --to-user="user123" --content="你好！"
 
+# 文件上传和发送
+./bin/youdu-cli upload-file --file-path="/path/to/file.pdf" --file-name="文档.pdf"
+./bin/youdu-cli send-file-with-upload --file-path="/path/to/file.pdf" --to-user="user123"
+
 # 群组操作
 ./bin/youdu-cli group get-list --user-id="user123"
 ./bin/youdu-cli group create --name="项目组"
@@ -231,6 +235,7 @@ MCP 服务器将所有适配器方法作为 MCP 工具提供，可被 Claude Des
 - **部门**：`get_dept_list`、`get_dept_user_list`、`get_dept_alias_list`、`create_dept`、`update_dept`、`delete_dept`
 - **用户**：`get_user`、`create_user`、`update_user`、`delete_user`
 - **消息**：`send_text_message`、`send_image_message`、`send_file_message`、`send_link_message`、`send_sys_message`
+- **文件**：`upload_file`、`send_file_with_upload`
 - **群组**：`get_group_list`、`get_group_info`、`create_group`、`update_group`、`delete_group`、`add_group_member`、`del_group_member`
 - **会话**：`create_session`、`get_session`、`update_session`、`send_text_session_message`、`send_image_session_message`、`send_file_session_message`
 
