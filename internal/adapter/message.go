@@ -3,8 +3,11 @@ package adapter
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/addcnos/youdu/v2"
+	"github.com/yourusername/youdu-app-mcp/internal/permission"
 )
 
 // SendTextMessageInput represents input for sending text message
@@ -215,6 +218,129 @@ func (a *Adapter) SendSysMessage(ctx context.Context, input SendSysMessageInput)
 	}
 
 	return &SendSysMessageOutput{
+		Success: true,
+	}, nil
+}
+
+// UploadFileInput represents input for uploading file
+type UploadFileInput struct {
+	FilePath string `json:"file_path" jsonschema:"description=Path to the file to upload,required"`
+	FileName string `json:"file_name" jsonschema:"description=Name of the file (with extension). If not provided, will be extracted from file path"`
+	FileType string `json:"file_type" jsonschema:"description=Type of file: image, file, voice, video,default=file"`
+}
+
+// UploadFileOutput represents output for uploading file
+type UploadFileOutput struct {
+	MediaID string `json:"media_id" jsonschema:"description=Media ID of the uploaded file"`
+	Success bool   `json:"success" jsonschema:"description=Whether the file was uploaded successfully"`
+}
+
+// UploadFile uploads a file to YouDu server and returns media_id
+func (a *Adapter) UploadFile(ctx context.Context, input UploadFileInput) (*UploadFileOutput, error) {
+	// 权限检查：文件上传需要消息权限
+	if err := a.checkPermission(permission.ResourceMessage, permission.ActionCreate); err != nil {
+		return nil, err
+	}
+
+	// 验证输入
+	if input.FilePath == "" {
+		return nil, fmt.Errorf("文件路径不能为空")
+	}
+
+	// 打开文件
+	file, err := os.Open(input.FilePath)
+	if err != nil {
+		return nil, fmt.Errorf("打开文件失败: %w", err)
+	}
+	defer file.Close()
+
+	// 如果没有提供文件名，从路径中提取
+	fileName := input.FileName
+	if fileName == "" {
+		fileName = filepath.Base(input.FilePath)
+	}
+
+	// 确定文件类型
+	fileType := input.FileType
+	if fileType == "" {
+		fileType = "file"
+	}
+
+	// 构造上传请求
+	req := youdu.UploadMediaRequest{
+		File:     file,
+		FileName: fileName,
+		FileType: youdu.FileType(fileType),
+	}
+
+	// 上传文件
+	resp, err := a.client.UploadMedia(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("上传文件失败: %w", err)
+	}
+
+	return &UploadFileOutput{
+		MediaID: resp.MediaID,
+		Success: true,
+	}, nil
+}
+
+// SendFileWithUploadInput represents input for uploading and sending file message in one step
+type SendFileWithUploadInput struct {
+	ToUser   string `json:"to_user" jsonschema:"description=Target user ID (use pipe | to separate multiple users)"`
+	ToDept   string `json:"to_dept" jsonschema:"description=Target department ID (use pipe | to separate multiple departments)"`
+	FilePath string `json:"file_path" jsonschema:"description=Path to the file to upload and send,required"`
+	FileName string `json:"file_name" jsonschema:"description=Name of the file (with extension). If not provided, will be extracted from file path"`
+	FileType string `json:"file_type" jsonschema:"description=Type of file: image, file, voice, video,default=file"`
+}
+
+// SendFileWithUploadOutput represents output for uploading and sending file message
+type SendFileWithUploadOutput struct {
+	MediaID string `json:"media_id" jsonschema:"description=Media ID of the uploaded file"`
+	Success bool   `json:"success" jsonschema:"description=Whether the file was uploaded and sent successfully"`
+}
+
+// SendFileWithUpload uploads a file and sends it as a message in one step
+func (a *Adapter) SendFileWithUpload(ctx context.Context, input SendFileWithUploadInput) (*SendFileWithUploadOutput, error) {
+	// 权限检查：检查消息发送权限
+	if err := a.checkMessageSendPermission(input.ToUser, input.ToDept); err != nil {
+		return nil, err
+	}
+
+	// 验证输入
+	if input.ToUser == "" && input.ToDept == "" {
+		return nil, fmt.Errorf("必须指定接收者：to_user 或 to_dept 至少填写一个")
+	}
+	if input.FilePath == "" {
+		return nil, fmt.Errorf("文件路径不能为空")
+	}
+
+	// 步骤1: 上传文件
+	uploadInput := UploadFileInput{
+		FilePath: input.FilePath,
+		FileName: input.FileName,
+		FileType: input.FileType,
+	}
+
+	uploadOutput, err := a.UploadFile(ctx, uploadInput)
+	if err != nil {
+		return nil, fmt.Errorf("上传文件失败: %w", err)
+	}
+
+	// 步骤2: 发送文件消息
+	sendInput := SendFileMessageInput{
+		ToUser:  input.ToUser,
+		ToDept:  input.ToDept,
+		MediaID: uploadOutput.MediaID,
+	}
+
+	_, err = a.SendFileMessage(ctx, sendInput)
+	if err != nil {
+		return nil, fmt.Errorf("发送文件消息失败: %w", err)
+	}
+
+	return &SendFileWithUploadOutput{
+		MediaID: uploadOutput.MediaID,
 		Success: true,
 	}, nil
 }
