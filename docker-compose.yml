@@ -1,0 +1,80 @@
+services:
+  # HTTP API 服务 - 供 LLM 通过 HTTP 协议调用
+  youdu-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: youdu-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8080}:8080"
+    environment:
+      # 有度服务器配置
+      - YOUDU_ADDR=${YOUDU_ADDR}
+      - YOUDU_BUIN=${YOUDU_BUIN}
+      - YOUDU_APP_ID=${YOUDU_APP_ID}
+      - YOUDU_AES_KEY=${YOUDU_AES_KEY}
+      # 数据库配置
+      - DB_PATH=/app/data/youdu.db
+      # Token 认证配置
+      - TOKEN_ENABLED=${TOKEN_ENABLED:-false}
+      # 权限配置
+      - PERMISSION_ENABLED=${PERMISSION_ENABLED:-true}
+      - PERMISSION_ALLOW_ALL=${PERMISSION_ALLOW_ALL:-false}
+    volumes:
+      # 持久化数据目录（SQLite 数据库）
+      - ./data:/app/data
+      # 配置文件目录
+      - ./config:/app/config
+    command: >
+      /app/youdu-cli serve-api 
+      --port 8080 
+      --config /app/config/config.yaml
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - youdu-network
+
+  # MCP 服务器 - 供 Claude Desktop 等 MCP 客户端调用
+  youdu-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: youdu-mcp
+    restart: unless-stopped
+    ports:
+      - "${MCP_PORT:-3000}:3000"
+    environment:
+      # 有度服务器配置
+      - YOUDU_ADDR=${YOUDU_ADDR}
+      - YOUDU_BUIN=${YOUDU_BUIN}
+      - YOUDU_APP_ID=${YOUDU_APP_ID}
+      - YOUDU_AES_KEY=${YOUDU_AES_KEY}
+      # 数据库配置
+      - DB_PATH=/app/data/youdu.db
+      # 权限配置
+      - PERMISSION_ENABLED=${PERMISSION_ENABLED:-true}
+      - PERMISSION_ALLOW_ALL=${PERMISSION_ALLOW_ALL:-false}
+    volumes:
+      # 持久化数据目录（共享 SQLite 数据库）
+      - ./data:/app/data
+      # 配置文件目录
+      - ./config:/app/config
+    command: >
+      /app/youdu-mcp
+    stdin_open: true
+    tty: true
+    networks:
+      - youdu-network
+
+networks:
+  youdu-network:
+    driver: bridge
+
+volumes:
+  # 数据持久化卷
+  youdu-data:

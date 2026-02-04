@@ -1,0 +1,67 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Build artifacts
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Test files and reports
+test/
+*.test
+coverage.txt
+coverage.html
+
+# Documentation
+docs/
+*.md
+!README.md
+CLAUDE.md
+CHANGELOG.md
+REQUIREMENTS.md
+VERIFICATION_COMPLETE.md
+IMPLEMENTATION_*.md
+
+# Configuration files (will be mounted as volumes)
+config.yaml
+config_*.yaml
+permission.yaml
+.env
+.env.local
+
+# Database files (will be mounted as volumes)
+*.db
+*.db-shm
+*.db-wal
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker files (no need to copy into image)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Scripts
+*.sh
+demo_*.sh
+
+# Data directory
+data/

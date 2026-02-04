@@ -21,6 +21,12 @@ go.work
 
 # Configuration files (may contain sensitive data)
 config.yaml
+.env
+.env.local
+
+# Docker data directories
+data/
+config/
 
 # Database files
 *.db
